@@ -1,5 +1,12 @@
 # IHMC Messager
 
+## Download
+
+In your build.gradle:
+
+`compile group: "us.ihmc", name: "ihmc-messager", version: `
+[ ![ihmc-commons](https://api.bintray.com/packages/ihmcrobotics/maven-release/ihmc-messager/images/download.svg) ](https://bintray.com/ihmcrobotics/maven-release/ihmc-messager/_latestVersion)
+
 ## What is Messager
 Messager is a lightweight library providing a simple messaging framework to enable topic-based communication between asynchronous modules.
 
