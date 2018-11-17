@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import us.ihmc.commons.PrintTools;
+import us.ihmc.log.LogTools;
 import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 
@@ -45,7 +45,7 @@ public class SharedMemoryMessager implements Messager
 
       if (!isConnected.get())
       {
-         PrintTools.warn(this, "This messager is closed, message's topic: " + messageTopic.getSimpleName());
+         LogTools.warn("This messager is closed, message's topic: " + messageTopic.getSimpleName());
          return;
       }
 
