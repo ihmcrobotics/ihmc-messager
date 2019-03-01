@@ -1,22 +1,18 @@
 package us.ihmc.messager;
 
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.jupiter.api.Test;
 import us.ihmc.commons.MutationTestFacilitator;
 import us.ihmc.log.LogTools;
-import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.examples.EnglishPerson;
 import us.ihmc.messager.examples.FrenchPerson;
-import us.ihmc.messager.kryo.KryoMessager;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static us.ihmc.messager.examples.EnglishPerson.ListenEnglish;
 import static us.ihmc.messager.examples.EnglishPerson.SpeakEnglish;
 import static us.ihmc.messager.examples.FrenchPerson.ListenFrench;
@@ -26,11 +22,6 @@ public class MessagerTest
 {
    @Test
    public void testSharedMemoryMessager() throws Exception
-   {
-      testMessager(messagerAPI -> new SharedMemoryMessager(messagerAPI));
-   }
-
-   private void testMessager(MessagerSupplier messagerSupplier) throws Exception
    {
       Map<String, String> englishToFrenchNumbers = new HashMap<>();
       Map<String, String> frenchToEnglishNumbers = new HashMap<>();
@@ -49,7 +40,7 @@ public class MessagerTest
       MessagerAPIFactory api = new MessagerAPIFactory();
       api.createRootCategory("TranslatorExample");
       api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
-      Messager messager = messagerSupplier.createMessager(api.getAPIAndCloseFactory());
+      Messager messager = new SharedMemoryMessager(api.getAPIAndCloseFactory());
       messager.startMessager();
 
       AtomicReference<String> englishInput = messager.createInput(ListenEnglish, "I've heard nothing yet.");
@@ -103,11 +94,6 @@ public class MessagerTest
             englishMessage = "the French said: " + entry.getValue();
       }
       messager.submitMessage(ListenEnglish, englishMessage);
-   }
-
-   interface MessagerSupplier
-   {
-      Messager createMessager(MessagerAPI messagerAPI);
    }
 
    public static void main(String[] args)
