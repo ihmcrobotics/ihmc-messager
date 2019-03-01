@@ -18,7 +18,7 @@ public class DethreadedKryoTest
    final String dataUDP = "Hello UDP";
 
    @Test
-   public void test() throws IOException
+   public void testKryoDethreaded() throws IOException
    {
       Server server = new Server(16384, 8192);
       server.getKryo().setRegistrationRequired(false);
@@ -88,7 +88,7 @@ public class DethreadedKryoTest
       while (!connected.get());
       LogTools.info("Connected!");
 
-      for (int i = 0; i < 10; i++)
+      for (int i = 0; i < 10; i++)  // hopefully there is a guarantee that after 4 calls all data has been transferred.
       {
          updateServer(server);
          updateClient(client);

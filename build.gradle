@@ -20,7 +20,10 @@ mainDependencies {
 
 kryoDependencies {
    compile ihmc.sourceSetProject("main")
-   compile group: "kryonet", name: "kryonet", version: "2.21"
+//   compile group: "kryonet", name: "kryonet", version: "2.21"
+//   compile group: "kryonet", name: "kryonet", version: "2.12"
+   compile group: "com.esotericsoftware", name: "kryonet", version: "2.22.0-RC1"
+//   compile group: "com.esotericsoftware", name: "kryo", version: "4.0.2"
 }
 
 examplesDependencies {
