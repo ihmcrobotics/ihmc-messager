@@ -46,9 +46,9 @@ public class KryoAdapterTest
       LogTools.info("Connecting...");
       client.connect();
       server.connect();
-      LogTools.info("Connected!");
 
-      ThreadTools.sleep(5); // give some time to warm up
+      while (!client.isConnected() || !server.isConnected());
+      LogTools.info("Connected!");
 
       for (int i = 0; i < 10; i++)
       {

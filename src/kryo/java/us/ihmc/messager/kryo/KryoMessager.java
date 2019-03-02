@@ -23,7 +23,7 @@ public class KryoMessager implements Messager
    private final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
    private final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
 
-   private boolean allowSelfSubmit = false;
+   private boolean allowSelfSubmit = true;
 
    /** Creates server. */
    public KryoMessager(MessagerAPI messagerAPI, int tcpPort, MessagerUpdateThread messagerUpdateThread)
@@ -43,7 +43,7 @@ public class KryoMessager implements Messager
       this.kryoAdapter = kryoAdapter;
       this.messagerUpdateThread = messagerUpdateThread;
 
-      kryoAdapter.setRecievedListener(object -> receiveMessage((Message) object));
+      kryoAdapter.setRecievedListener(object -> receiveMessage(object));
    }
 
    @Override
@@ -68,10 +68,12 @@ public class KryoMessager implements Messager
       kryoAdapter.sendTCP(message);
    }
 
-   private void receiveMessage(Message message)
+   private void receiveMessage(Object object)
    {
-      if (message == null)
+      if (object == null || !(object instanceof Message))
          return;
+
+      Message message = (Message) object;
 
       if (!messagerAPI.containsTopic(message.getTopicID()))
          throw new RuntimeException("The message is not part of this messager's API.");
