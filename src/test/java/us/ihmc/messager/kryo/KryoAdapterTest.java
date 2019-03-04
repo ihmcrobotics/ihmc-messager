@@ -2,6 +2,7 @@ package us.ihmc.messager.kryo;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
+import us.ihmc.commons.thread.Notification;
 import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 
@@ -95,23 +96,5 @@ public class KryoAdapterTest
    {
       LogTools.info("Updating client...");
       client.update();
-   }
-
-   class Notification
-   {
-      private boolean notification = false;
-      private boolean previousValue = false;
-
-      public boolean poll()
-      {
-         previousValue = notification;
-         notification = false;
-         return previousValue;
-      }
-
-      public void set()
-      {
-         notification = true;
-      }
    }
 }
