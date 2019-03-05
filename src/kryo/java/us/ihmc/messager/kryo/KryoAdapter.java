@@ -27,7 +27,17 @@ public class KryoAdapter
    private final RunnableThatThrows disconnector;
    private final Consumer tcpSender;
 
-   public KryoAdapter(int tcpPort)
+   public static KryoAdapter createServer(int tcpPort)
+   {
+      return new KryoAdapter(tcpPort);
+   }
+
+   public static KryoAdapter createClient(String serverAddress, int tcpPort)
+   {
+      return new KryoAdapter(serverAddress, tcpPort);
+   }
+
+   private KryoAdapter(int tcpPort)
    {
       Server server = new Server();
       server.addListener(kryoListener);
@@ -39,7 +49,7 @@ public class KryoAdapter
       tcpSender = message -> server.sendToAllTCP(message);
    }
 
-   public KryoAdapter(String serverAddress, int tcpPort)
+   private KryoAdapter(String serverAddress, int tcpPort)
    {
       Client client = new Client();
       client.addListener(kryoListener);

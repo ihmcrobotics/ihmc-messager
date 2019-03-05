@@ -76,7 +76,7 @@ public class KryoMessagerTest
       MessagerAPIFactory api = new MessagerAPIFactory();
       api.createRootCategory("TranslatorExample");
       api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
-      Messager serverMessager = new KryoMessager(api.getAPIAndCloseFactory(), tcpPort, serverManualCallUpdater);
+      Messager serverMessager = KryoMessager.createServer(api.getAPIAndCloseFactory(), tcpPort, serverManualCallUpdater);
       serverMessager.startMessager();
 
       LogTools.info("Server connecting...");
@@ -84,7 +84,7 @@ public class KryoMessagerTest
       api = new MessagerAPIFactory();
       api.createRootCategory("TranslatorExample");
       api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
-      Messager clientMessager = new KryoMessager(api.getAPIAndCloseFactory(), "localhost", tcpPort, clientManualCallUpdater);
+      Messager clientMessager = KryoMessager.createClient(api.getAPIAndCloseFactory(), "localhost", tcpPort, clientManualCallUpdater);
       clientMessager.startMessager();
 
       LogTools.info("Client connecting...");

@@ -26,15 +26,15 @@ public class KryoMessager implements Messager
    private boolean allowSelfSubmit = true;
 
    /** Creates server. */
-   public KryoMessager(MessagerAPI messagerAPI, int tcpPort, MessagerUpdateThread messagerUpdateThread)
+   public static KryoMessager createServer(MessagerAPI messagerAPI, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
-      this(messagerAPI, new KryoAdapter(tcpPort), messagerUpdateThread);
+      return new KryoMessager(messagerAPI, KryoAdapter.createServer(tcpPort), messagerUpdateThread);
    }
 
    /** Creates client. */
-   public KryoMessager(MessagerAPI messagerAPI, String serverAddress, int tcpPort, MessagerUpdateThread messagerUpdateThread)
+   public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
-      this(messagerAPI, new KryoAdapter(serverAddress, tcpPort), messagerUpdateThread);
+      return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), messagerUpdateThread);
    }
 
    private KryoMessager(MessagerAPI messagerAPI, KryoAdapter kryoAdapter, MessagerUpdateThread messagerUpdateThread)
