@@ -4,6 +4,10 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.jupiter.api.Test;
 import us.ihmc.commons.MutationTestFacilitator;
 import us.ihmc.log.LogTools;
+import us.ihmc.messager.MessagerAPIFactory.Category;
+import us.ihmc.messager.MessagerAPIFactory.CategoryTheme;
+import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
+import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.examples.EnglishPerson;
 import us.ihmc.messager.examples.FrenchPerson;
 
@@ -62,6 +66,26 @@ public class MessagerTest
       messager.submitMessage(SpeakEnglish, "What about two.");
       assertEquals("deux", frenchInput.get(), "Should have heard 2");
 
+      messager.closeMessager();
+   }
+
+   @Test
+   public void testCreateFactory() throws Exception
+   {
+      MessagerAPIFactory apiFactory = new MessagerAPIFactory();
+      Category rootCategory = apiFactory.createRootCategory(apiFactory.createCategoryTheme(MessagerTest.class.getSimpleName()));
+
+      CategoryTheme theme = apiFactory.createCategoryTheme("SomethingElseTheme");
+      Topic<Boolean> topic = rootCategory.child(theme).topic(apiFactory.createTypedTopicTheme(Boolean.class.getSimpleName()));
+
+      MessagerAPI api1 = apiFactory.getAPIAndCloseFactory();
+
+      MessagerAPIFactory api = new MessagerAPIFactory();
+      api.createRootCategory("Root");
+      api.includeMessagerAPIs(api1);
+
+      Messager messager = new SharedMemoryMessager(api.getAPIAndCloseFactory());
+      messager.startMessager();
       messager.closeMessager();
    }
 
