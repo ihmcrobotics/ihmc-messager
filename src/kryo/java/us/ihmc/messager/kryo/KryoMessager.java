@@ -11,8 +11,18 @@ import us.ihmc.messager.TopicListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * A {@link Messager} implementation that uses Kryonet under the hood.
+ *
+ * With Kryo there must be a server and a client, so {@link KryoMessager#createServer} needs to be
+ * called on one side and {@link KryoMessager#createClient} on the other.
+ *
+ * Sometimes the requested port is unavailable and you will need to select another.
+ */
 public class KryoMessager implements Messager
 {
    private final MessagerAPI messagerAPI;
@@ -25,25 +35,63 @@ public class KryoMessager implements Messager
 
    private boolean allowSelfSubmit = true;
 
-   /** Creates server. */
+   /**
+    * Creates a KryoMessager server side using
+    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the hood.
+    *
+    * @param messagerAPI
+    * @param tcpPort
+    * @param name
+    * @param updatePeriodMillis
+    * @return
+    */
    public static KryoMessager createServer(MessagerAPI messagerAPI, int tcpPort, String name, int updatePeriodMillis)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createServer(tcpPort), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
    }
 
-   /** Creates server. */
+   /**
+    * Creates a KryoMessager server that provides the user with a Runnable through {@link MessagerUpdateThread}
+    * that updates the Kryo internals. The user is responsible for calling that runnable periodically.
+    *
+    * @param messagerAPI
+    * @param tcpPort
+    * @param messagerUpdateThread
+    * @return
+    */
    public static KryoMessager createServer(MessagerAPI messagerAPI, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createServer(tcpPort), messagerUpdateThread);
    }
 
-   /** Creates client. */
+   /**
+    * Creates a KryoMessager client side using
+    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the hood.
+    *
+    * The client side requires an address i.e. "localhost" or "192.168.1.3", etc.
+    *
+    * @param messagerAPI
+    * @param serverAddress
+    * @param tcpPort
+    * @param name
+    * @param updatePeriodMillis
+    * @return
+    */
    public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, String name, int updatePeriodMillis)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
    }
 
-   /** Creates client. */
+   /**
+    * Creates a KryoMessager client that provides the user with a Runnable through {@link MessagerUpdateThread}
+    * that updates the Kryo internals. The user is responsible for calling that runnable periodically.
+    *
+    * @param messagerAPI
+    * @param serverAddress
+    * @param tcpPort
+    * @param messagerUpdateThread
+    * @return
+    */
    public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), messagerUpdateThread);
@@ -58,6 +106,7 @@ public class KryoMessager implements Messager
       kryoAdapter.setRecievedListener(object -> receiveMessage(object));
    }
 
+   /** @inheritDoc */
    @Override
    public <T> void submitMessage(Message<T> message)
    {
@@ -103,6 +152,7 @@ public class KryoMessager implements Messager
          topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
+   /** @inheritDoc */
    @Override
    public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
@@ -118,6 +168,7 @@ public class KryoMessager implements Messager
       return boundVariable;
    }
 
+   /** @inheritDoc */
    @Override
    public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
@@ -130,6 +181,7 @@ public class KryoMessager implements Messager
       topicListeners.add((TopicListener<Object>) listener);
    }
 
+   /** @inheritDoc */
    @Override
    public void startMessager() throws Exception
    {
@@ -139,6 +191,7 @@ public class KryoMessager implements Messager
       messagerUpdateThread.start(() -> kryoAdapter.update());
    }
 
+   /** @inheritDoc */
    @Override
    public void closeMessager() throws Exception
    {
@@ -146,24 +199,28 @@ public class KryoMessager implements Messager
       messagerUpdateThread.stop();
    }
 
+   /** @inheritDoc */
    @Override
    public boolean isMessagerOpen()
    {
       return kryoAdapter.isConnected();
    }
 
+   /** @inheritDoc */
    @Override
    public void notifyMessagerStateListeners()
    {
       connectionStateListeners.forEach(listener -> listener.messagerStateChanged(isMessagerOpen()));
    }
 
+   /** @inheritDoc */
    @Override
    public void registerMessagerStateListener(MessagerStateListener listener)
    {
       kryoAdapter.addConnectionStateListener(state -> listener.messagerStateChanged(state));
    }
 
+   /** @inheritDoc */
    @Override
    public MessagerAPI getMessagerAPI()
    {
