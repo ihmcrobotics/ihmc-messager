@@ -26,9 +26,21 @@ public class KryoMessager implements Messager
    private boolean allowSelfSubmit = true;
 
    /** Creates server. */
+   public static KryoMessager createServer(MessagerAPI messagerAPI, int tcpPort, String name, int updatePeriodMillis)
+   {
+      return new KryoMessager(messagerAPI, KryoAdapter.createServer(tcpPort), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
+   }
+
+   /** Creates server. */
    public static KryoMessager createServer(MessagerAPI messagerAPI, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createServer(tcpPort), messagerUpdateThread);
+   }
+
+   /** Creates client. */
+   public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, String name, int updatePeriodMillis)
+   {
+      return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
    }
 
    /** Creates client. */
@@ -121,7 +133,9 @@ public class KryoMessager implements Messager
    @Override
    public void startMessager() throws Exception
    {
+      LogTools.debug("Connecting kryo");
       kryoAdapter.connect();
+      LogTools.debug("Starting kryo update");
       messagerUpdateThread.start(() -> kryoAdapter.update());
    }
 
