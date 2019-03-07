@@ -66,6 +66,9 @@ public class KryoMessager implements Messager
 
       Topic<?> messageTopic = messagerAPI.findTopic(message.getTopicID());
 
+      if (allowSelfSubmit)
+         receiveMessage(message);
+
       if (!kryoAdapter.isConnected())
       {
          LogTools.warn("This messager is closed, message's topic: " + messageTopic.getName());
@@ -73,9 +76,6 @@ public class KryoMessager implements Messager
       }
 
       LogTools.debug("Submit message for topic: {}", messageTopic.getName());
-
-      if (allowSelfSubmit)
-         receiveMessage(message);
 
       kryoAdapter.sendTCP(message);
    }
