@@ -23,8 +23,37 @@ public class MessagerAPIFactory
 
    private MessagerAPI api;
 
+   /**
+    * Initialize an API from several Messager APIs.
+    *
+    * @param clazz to name the root theme
+    * @param apis
+    * @return combined Messager API
+    */
+   public static MessagerAPI createAPIFor(Class clazz, MessagerAPI... apis)
+   {
+      MessagerAPIFactory apiFactory = new MessagerAPIFactory(clazz);
+
+      for (MessagerAPI api : apis)
+      {
+         apiFactory.includeMessagerAPIs(api);
+      }
+
+      return apiFactory.getAPIAndCloseFactory();
+   }
+
    public MessagerAPIFactory()
    {
+   }
+
+   /**
+    * Initialize with a root category with a theme named after the class simple name.
+    *
+    * @param clazz to name the theme with {@link Class#getSimpleName()}
+    */
+   public MessagerAPIFactory(Class<?> clazz)
+   {
+      createRootCategory(clazz.getSimpleName());
    }
 
    /**
@@ -90,6 +119,20 @@ public class MessagerAPIFactory
       categoryThemeIDSet = null;
       topicThemeIDSet = null;
       return api;
+   }
+
+   /**
+    * Create a typed topic with category theme "topicNameTheme" and topic theme "topicTypeSimpleName"
+    * on the root category.
+    *
+    * @param topicName
+    * @param topicType
+    * @param <T>
+    * @return topic
+    */
+   public <T> Topic<T> createRootTopicDirectly(String topicName, Class<T> topicType)
+   {
+      return api.getFirstRoot().child(createCategoryTheme(topicName + "Theme")).topic(createTypedTopicTheme(topicType.getSimpleName()));
    }
 
    /**
@@ -170,6 +213,11 @@ public class MessagerAPIFactory
                throw new RuntimeException("Roots must have unique name and ID.");
          }
          roots.add(newRoot);
+      }
+
+      private Category getFirstRoot()
+      {
+         return roots.get(0);
       }
 
       /**
