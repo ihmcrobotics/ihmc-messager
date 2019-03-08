@@ -26,13 +26,13 @@ public class MessagerAPIFactory
    /**
     * Initialize an API from several Messager APIs.
     *
-    * @param clazz to name the root theme
+    * @param rootCategoryName
     * @param apis
     * @return combined Messager API
     */
-   public static MessagerAPI createAPIFor(Class clazz, MessagerAPI... apis)
+   public static MessagerAPI newCombinedAPI(String rootCategoryName, MessagerAPI... apis)
    {
-      MessagerAPIFactory apiFactory = new MessagerAPIFactory(clazz);
+      MessagerAPIFactory apiFactory = new MessagerAPIFactory(rootCategoryName);
 
       for (MessagerAPI api : apis)
       {
@@ -47,13 +47,13 @@ public class MessagerAPIFactory
    }
 
    /**
-    * Initialize with a root category with a theme named after the class simple name.
+    * Initialize with a root category theme.
     *
-    * @param clazz to name the theme with {@link Class#getSimpleName()}
+    * @param rootCategoryName
     */
-   public MessagerAPIFactory(Class<?> clazz)
+   public MessagerAPIFactory(String rootCategoryName)
    {
-      createRootCategory(clazz.getSimpleName());
+      createRootCategory(rootCategoryName);
    }
 
    /**
