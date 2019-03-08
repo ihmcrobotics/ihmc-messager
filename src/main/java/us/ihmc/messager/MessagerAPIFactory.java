@@ -23,6 +23,25 @@ public class MessagerAPIFactory
 
    private MessagerAPI api;
 
+   /**
+    * Initialize an API from several Messager APIs.
+    *
+    * @param rootCategoryName
+    * @param apis
+    * @return combined Messager API
+    */
+   public static MessagerAPI newCombinedAPI(String rootCategoryName, MessagerAPI... apis)
+   {
+      MessagerAPIFactory apiFactory = new MessagerAPIFactory(rootCategoryName);
+
+      for (MessagerAPI api : apis)
+      {
+         apiFactory.includeMessagerAPIs(api);
+      }
+
+      return apiFactory.getAPIAndCloseFactory();
+   }
+
    public MessagerAPIFactory()
    {
    }
