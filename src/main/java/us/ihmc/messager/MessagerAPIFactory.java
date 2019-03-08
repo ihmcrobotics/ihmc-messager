@@ -47,16 +47,6 @@ public class MessagerAPIFactory
    }
 
    /**
-    * Initialize with a root category theme.
-    *
-    * @param rootCategoryName
-    */
-   public MessagerAPIFactory(String rootCategoryName)
-   {
-      createRootCategory(rootCategoryName);
-   }
-
-   /**
     * Creates the root category for this API from which sub-categories and topics can be created.
     * 
     * @param rootCategoryName the name of the root category.
@@ -119,20 +109,6 @@ public class MessagerAPIFactory
       categoryThemeIDSet = null;
       topicThemeIDSet = null;
       return api;
-   }
-
-   /**
-    * Create a typed topic with category theme "topicNameTheme" and topic theme "topicTypeSimpleName"
-    * on the root category.
-    *
-    * @param topicName
-    * @param topicType
-    * @param <T>
-    * @return topic
-    */
-   public <T> Topic<T> createRootTopicDirectly(String topicName, Class<T> topicType)
-   {
-      return api.getFirstRoot().child(createCategoryTheme(topicName + "Theme")).topic(createTypedTopicTheme(topicType.getSimpleName()));
    }
 
    /**
@@ -213,11 +189,6 @@ public class MessagerAPIFactory
                throw new RuntimeException("Roots must have unique name and ID.");
          }
          roots.add(newRoot);
-      }
-
-      private Category getFirstRoot()
-      {
-         return roots.get(0);
       }
 
       /**
