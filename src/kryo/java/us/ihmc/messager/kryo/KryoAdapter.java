@@ -4,9 +4,11 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import us.ihmc.commons.RunnableThatThrows;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
 import us.ihmc.commons.exception.ExceptionTools;
+import us.ihmc.log.LogTools;
 
 import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
@@ -90,13 +92,25 @@ public class KryoAdapter
 
    private void startNonBlockingConnect()
    {
-      ExceptionTools.handle(() -> connector.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
+      LogTools.debug("Connecting...");
+      MutableBoolean successful = new MutableBoolean(false);
+      while (!successful.getValue())
+      {
+         successful.setTrue();
+         ExceptionTools.handle(() -> connector.run(), e ->
+         {
+            LogTools.error(e.getMessage());
+            LogTools.debug("Trying to connect again...");
+            successful.setFalse();
+         });
+      }
    }
 
    private void waitForConnection()
    {
       while (!isConnectedSupplier.getAsBoolean())
       {
+         LogTools.debug("Updating...");
          ExceptionTools.handle(() -> updater.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
       }
    }

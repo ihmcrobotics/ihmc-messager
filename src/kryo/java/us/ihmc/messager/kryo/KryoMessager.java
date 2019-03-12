@@ -185,9 +185,16 @@ public class KryoMessager implements Messager
    @Override
    public void startMessager() throws Exception
    {
-      LogTools.debug("Connecting kryo");
+      LogTools.debug("Starting to connect KryoNet");
       kryoAdapter.connect();
-      LogTools.debug("Starting kryo update");
+
+      LogTools.debug("Waiting for KryoNet to connect");
+      while (!isMessagerOpen())  // this is necessary before starting the messager update thread
+      {                          // otherwise connection times out because multiple threads are calling
+         Thread.yield();         // kryo.update()
+      }
+
+      LogTools.debug("Starting KryoNet update thread");
       messagerUpdateThread.start(() -> kryoAdapter.update());
    }
 
