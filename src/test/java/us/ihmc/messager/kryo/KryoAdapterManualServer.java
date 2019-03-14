@@ -14,7 +14,7 @@ public class KryoAdapterManualServer
       AtomicInteger counter = new AtomicInteger();
       KryoAdapter server = KryoAdapter.createServer(KryoAdapterTest.tcpPort);
       Notification serverReceived = new Notification();
-      server.setRecievedListener(message -> {
+      server.setReceivedListener(message -> {
          LogTools.info("Server received: {}", message);
          assertTrue(message instanceof String);
          assertTrue(((String) message).contains("TCP"));

@@ -11,7 +11,7 @@ public class KryoAdapterManualClient
    {
       KryoAdapter client = KryoAdapter.createClient(KryoAdapterTest.host, KryoAdapterTest.tcpPort);
       Notification clientReceived = new Notification();
-      client.setRecievedListener(message -> {
+      client.setReceivedListener(message -> {
          LogTools.info("Client received: {}", message);
          assertTrue(message instanceof String);
          assertTrue(((String) message).contains("TCP"));

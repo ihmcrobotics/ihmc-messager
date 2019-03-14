@@ -25,8 +25,11 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class KryoMessager implements Messager
 {
+   /** The Messager API */
    private final MessagerAPI messagerAPI;
+   /** Access to Kryonet */
    private final KryoAdapter kryoAdapter;
+   /** Abstraction for external threads to update this how they want */
    private MessagerUpdateThread messagerUpdateThread;
 
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
@@ -103,7 +106,7 @@ public class KryoMessager implements Messager
       this.kryoAdapter = kryoAdapter;
       this.messagerUpdateThread = messagerUpdateThread;
 
-      kryoAdapter.setRecievedListener(object -> receiveMessage(object));
+      kryoAdapter.setReceivedListener(object -> receiveMessage(object));
    }
 
    /** @inheritDoc */
