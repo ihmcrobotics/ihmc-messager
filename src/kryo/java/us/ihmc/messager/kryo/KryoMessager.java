@@ -236,4 +236,16 @@ public class KryoMessager implements Messager
    {
       return messagerAPI;
    }
+
+   /**
+    * Set whether messages submitted to this messager should only be sent to the remote node and
+    * not this one. With no self submission, messages will be missed from the side they are sent from.
+    * In most cases, setting to false will result in unexpected behavior.
+    *
+    * @param allowSelfSubmit
+    */
+   public void setAllowSelfSubmit(boolean allowSelfSubmit)
+   {
+      this.allowSelfSubmit = allowSelfSubmit;
+   }
 }

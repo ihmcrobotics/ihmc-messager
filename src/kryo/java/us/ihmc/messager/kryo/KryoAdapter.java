@@ -4,6 +4,7 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import us.ihmc.commons.RunnableThatThrows;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
@@ -56,7 +57,8 @@ public class KryoAdapter
 
    private KryoAdapter(int tcpPort)
    {
-      Server server = new Server();
+      Log.TRACE();
+      Server server = new Server(16384, 8192);
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
       isConnectedSupplier = () -> server.getConnections().length > 0;
@@ -68,7 +70,8 @@ public class KryoAdapter
 
    private KryoAdapter(String serverAddress, int tcpPort)
    {
-      Client client = new Client();
+      Log.TRACE();
+      Client client = new Client(16384, 8192);
       client.addListener(kryoListener);
       client.getKryo().setRegistrationRequired(false);
       isConnectedSupplier = () -> client.isConnected();
