@@ -2,6 +2,7 @@ package us.ihmc.messager.kryo;
 
 import com.esotericsoftware.kryonet.*;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
 import us.ihmc.commons.exception.ExceptionTools;
@@ -9,6 +10,7 @@ import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DethreadedKryoTest
@@ -20,6 +22,11 @@ public class DethreadedKryoTest
 
    @Test
    public void testKryoDethreaded() throws IOException
+   {
+      Assertions.assertTimeoutPreemptively(Duration.ofSeconds(10), () -> runDethreadedKryoTest());
+   }
+
+   private void runDethreadedKryoTest() throws IOException
    {
       Server server = new Server(16384, 8192);
       server.getKryo().setRegistrationRequired(false);

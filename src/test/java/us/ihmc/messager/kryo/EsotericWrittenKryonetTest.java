@@ -2,7 +2,6 @@ package us.ihmc.messager.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.*;
-
 import com.esotericsoftware.minlog.Log;
 import com.esotericsoftware.minlog.Log.Logger;
 import org.junit.jupiter.api.AfterEach;
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 
 public class EsotericWrittenKryonetTest
@@ -27,6 +27,11 @@ public class EsotericWrittenKryonetTest
 
    @Test
    public void testPingPong() throws IOException
+   {
+      Assertions.assertTimeoutPreemptively(Duration.ofSeconds(10), () -> runEsotericKryoTest());
+   }
+
+   private void runEsotericKryoTest() throws IOException
    {
       // Log.TRACE();
       // Log.DEBUG();

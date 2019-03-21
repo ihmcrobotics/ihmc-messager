@@ -1,11 +1,14 @@
 package us.ihmc.messager.kryo;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import us.ihmc.commons.thread.Notification;
 import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class KryoAdapterTest
@@ -16,6 +19,11 @@ public class KryoAdapterTest
 
    @Test
    public void testKryoAdapter()
+   {
+      Assertions.assertTimeoutPreemptively(Duration.ofSeconds(10), () -> runKryoAdapterTest());
+   }
+
+   private void runKryoAdapterTest()
    {
       AtomicInteger counter = new AtomicInteger();
       KryoAdapter server = KryoAdapter.createServer(tcpPort);
