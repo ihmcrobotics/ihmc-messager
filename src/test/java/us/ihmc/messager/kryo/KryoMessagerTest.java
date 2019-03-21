@@ -2,6 +2,7 @@ package us.ihmc.messager.kryo;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import us.ihmc.commons.MutationTestFacilitator;
 import us.ihmc.log.LogTools;
@@ -10,21 +11,29 @@ import us.ihmc.messager.MessagerAPIFactory;
 import us.ihmc.messager.examples.EnglishPerson;
 import us.ihmc.messager.examples.FrenchPerson;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static us.ihmc.messager.examples.EnglishPerson.ListenEnglish;
-import static us.ihmc.messager.examples.EnglishPerson.SpeakEnglish;
-import static us.ihmc.messager.examples.FrenchPerson.ListenFrench;
-import static us.ihmc.messager.examples.FrenchPerson.SpeakFrench;
+import static org.junit.jupiter.api.Assertions.*;
+import static us.ihmc.messager.examples.EnglishPerson.*;
+import static us.ihmc.messager.examples.FrenchPerson.*;
 
 public class KryoMessagerTest
 {
+
+   private Messager clientMessager;
+   private Messager serverMessager;
+
    @Test
-   public void testKryoMessager() throws Exception
+   public void testKryoMessager()
+   {
+      Assertions.assertTimeoutPreemptively(Duration.ofSeconds(10), () -> runKryoMessagerTest());
+   }
+
+   private void runKryoMessagerTest() throws Exception
    {
       Map<String, String> englishToFrenchNumbers = new HashMap<>();
       Map<String, String> frenchToEnglishNumbers = new HashMap<>();
@@ -73,23 +82,48 @@ public class KryoMessagerTest
       };
 
       int tcpPort = 54557;
-      MessagerAPIFactory api = new MessagerAPIFactory();
-      api.createRootCategory("TranslatorExample");
-      api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
-      Messager serverMessager = KryoMessager.createServer(api.getAPIAndCloseFactory(), tcpPort, serverManualCallUpdater);
-      serverMessager.startMessager();
+
+      Thread serverThread = new Thread(() -> {
+         MessagerAPIFactory api = new MessagerAPIFactory();
+         api.createRootCategory("TranslatorExample");
+         api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
+         serverMessager = KryoMessager.createServer(api.getAPIAndCloseFactory(), tcpPort, serverManualCallUpdater);
+         try
+         {
+            serverMessager.startMessager();
+         }
+         catch (Exception e)
+         {
+            e.printStackTrace();
+         }
+      });
+
+      Thread clientThread = new Thread(() -> {
+         MessagerAPIFactory api = new MessagerAPIFactory();
+         api.createRootCategory("TranslatorExample");
+         api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
+         clientMessager = KryoMessager.createClient(api.getAPIAndCloseFactory(), "localhost", tcpPort, clientManualCallUpdater);
+         try
+         {
+            clientMessager.startMessager();
+         }
+         catch (Exception e)
+         {
+            e.printStackTrace();
+         }
+      });
 
       LogTools.info("Server connecting...");
-
-      api = new MessagerAPIFactory();
-      api.createRootCategory("TranslatorExample");
-      api.includeMessagerAPIs(EnglishPerson.EnglishAPI, FrenchPerson.FrenchAPI);
-      Messager clientMessager = KryoMessager.createClient(api.getAPIAndCloseFactory(), "localhost", tcpPort, clientManualCallUpdater);
-      clientMessager.startMessager();
-
       LogTools.info("Client connecting...");
 
-      while (!serverMessager.isMessagerOpen() || !clientMessager.isMessagerOpen());  // wait for connection
+      serverThread.start();
+      clientThread.start();
+
+      serverThread.join();
+      clientThread.join();
+
+      assertTrue(serverMessager.isMessagerOpen());
+      assertTrue(clientMessager.isMessagerOpen());
 
       LogTools.info("Connected!");
 
@@ -116,8 +150,8 @@ public class KryoMessagerTest
 
       runUpdates(serverUpdater, clientUpdater);
 
-//      serverMessager.submitMessage(ListenEnglish, "Test message on ListenEnglish topic.");
-//      serverMessager.submitMessage(ListenFrench, "Test message on ListenEnglish topic.");
+      //      serverMessager.submitMessage(ListenEnglish, "Test message on ListenEnglish topic.");
+      //      serverMessager.submitMessage(ListenFrench, "Test message on ListenEnglish topic.");
       runUpdates(serverUpdater, clientUpdater);
 
       serverMessager.submitMessage(SpeakEnglish, "Let the French person know I said five.");

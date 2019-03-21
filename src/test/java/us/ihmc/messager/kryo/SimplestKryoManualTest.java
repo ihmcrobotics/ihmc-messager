@@ -1,20 +1,18 @@
 package us.ihmc.messager.kryo;
 
 import com.esotericsoftware.kryonet.*;
-import org.junit.jupiter.api.Test;
 import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 
 import java.io.IOException;
 
-public class SimplestKryoTest
+public class SimplestKryoManualTest
 {
    static public String host = "localhost";
    static public int tcpPort = 54555, udpPort = 54777;
    final String dataTCP = "Hello TCP";
    final String dataUDP = "Hello UDP";
 
-   @Test
    public void test() throws IOException
    {
       Server server = new Server(16384, 8192);
@@ -64,9 +62,14 @@ public class SimplestKryoTest
 
       client.connect(5000, host, tcpPort, udpPort);
 
-      ThreadTools.sleep(2000);
+      ThreadTools.sleep(5);
 
       client.stop();
       server.stop();
+   }
+
+   public static void main(String[] args) throws IOException
+   {
+      new SimplestKryoManualTest().test();
    }
 }
