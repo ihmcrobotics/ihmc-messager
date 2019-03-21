@@ -82,6 +82,7 @@ public class KryoMessager implements Messager
     */
    public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, String name, int updatePeriodMillis)
    {
+//      return createClient(messagerAPI, serverAddress, tcpPort, name, updatePeriodMillis, KryoAdapter.)
       return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
    }
 
@@ -98,6 +99,41 @@ public class KryoMessager implements Messager
    public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort, MessagerUpdateThread messagerUpdateThread)
    {
       return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort), messagerUpdateThread);
+   }
+
+   /**
+    * Creates a KryoMessager client side using
+    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the hood.
+    *
+    * The client side requires an address i.e. "localhost" or "192.168.1.3", etc.
+    *
+    * @param messagerAPI the Messager API
+    * @param serverAddress of the host to connect to, an IP address or domain
+    * @param tcpPort port that the server is bound to
+    * @param name of the update thread
+    * @param updatePeriodMillis how often to update this messager
+    * @return new Kryo Messager
+    */
+   public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort,
+                                           String name, int updatePeriodMillis, int writeBufferSize, int objectBufferSize)
+   {
+      return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort, writeBufferSize, objectBufferSize), new DefaultMessagerUpdateThread(name, updatePeriodMillis));
+   }
+
+   /**
+    * Creates a KryoMessager client that provides the user with a Runnable through {@link MessagerUpdateThread}
+    * that updates the Kryo internals. The user is responsible for calling that runnable periodically.
+    *
+    * @param messagerAPI the Messager API
+    * @param serverAddress of the host to connect to, an IP address or domain
+    * @param tcpPort port that the server is bound to
+    * @param messagerUpdateThread for using your own thread scheduler or for manual calls for testing
+    * @return new Kryo Messager
+    */
+   public static KryoMessager createClient(MessagerAPI messagerAPI, String serverAddress, int tcpPort,
+                                           MessagerUpdateThread messagerUpdateThread, int writeBufferSize, int objectBufferSize)
+   {
+      return new KryoMessager(messagerAPI, KryoAdapter.createClient(serverAddress, tcpPort, writeBufferSize, objectBufferSize), messagerUpdateThread);
    }
 
    private KryoMessager(MessagerAPI messagerAPI, KryoAdapter kryoAdapter, MessagerUpdateThread messagerUpdateThread)

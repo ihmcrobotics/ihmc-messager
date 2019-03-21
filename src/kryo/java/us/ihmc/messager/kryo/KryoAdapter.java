@@ -22,6 +22,10 @@ import java.util.function.Consumer;
  */
 public class KryoAdapter
 {
+   /** Default write size buffer. */
+   public static final int DEFAULT_WRITE_BUFFER_SIZE = 16384;
+   /** Default object size buffer. */
+   public static final int DEFAULT_OBJECT_BUFFER_SIZE = 8192;
    private Listener kryoListener = new KryoListener();
    private Consumer receivedConsumer;
    private final ArrayList<Consumer> connectionStateListeners = new ArrayList<>();
@@ -33,18 +37,43 @@ public class KryoAdapter
    private final Consumer tcpSender;
 
    /**
-    * Create a Kryonet server.
+    * Create a Kryonet server with default buffer sizes.
     *
     * @param tcpPort
     * @return server
     */
    public static KryoAdapter createServer(int tcpPort)
    {
-      return new KryoAdapter(tcpPort);
+      return new KryoAdapter(tcpPort, DEFAULT_WRITE_BUFFER_SIZE, DEFAULT_OBJECT_BUFFER_SIZE);
    }
 
    /**
-    * Create a Kryonet client.
+    * Create a Kryonet server.
+    *
+    * @param tcpPort
+    * @param writeBufferSize One buffer of this size is allocated for each connected client. Objects are serialized to the write
+    *           buffer where the bytes are queued until they can be written to the TCP socket.
+    *           <p>
+    *           Normally the socket is writable and the bytes are written immediately. If the socket cannot be written to and
+    *           enough serialized objects are queued to overflow the buffer, then the connection will be closed.
+    *           <p>
+    *           The write buffer should be sized at least as large as the largest object that will be sent, plus some head room to
+    *           allow for some serialized objects to be queued in case the buffer is temporarily not writable. The amount of head
+    *           room needed is dependent upon the size of objects being sent and how often they are sent.
+    * @param objectBufferSize One (using only TCP) or three (using both TCP and UDP) buffers of this size are allocated. These
+    *           buffers are used to hold the bytes for a single object graph until it can be sent over the network or
+    *           deserialized.
+    *           <p>
+    *           The object buffers should be sized at least as large as the largest object that will be sent or received.
+    * @return server
+    */
+   public static KryoAdapter createServer(int tcpPort, int writeBufferSize, int objectBufferSize)
+   {
+      return new KryoAdapter(tcpPort, writeBufferSize, objectBufferSize);
+   }
+
+   /**
+    * Create a Kryonet client with default buffer sizes.
     *
     * @param serverAddress
     * @param tcpPort
@@ -52,13 +81,38 @@ public class KryoAdapter
     */
    public static KryoAdapter createClient(String serverAddress, int tcpPort)
    {
-      return new KryoAdapter(serverAddress, tcpPort);
+      return new KryoAdapter(serverAddress, tcpPort, DEFAULT_WRITE_BUFFER_SIZE, DEFAULT_OBJECT_BUFFER_SIZE);
    }
 
-   private KryoAdapter(int tcpPort)
+   /**
+    * Create a Kryonet client.
+    *
+    * @param serverAddress
+    * @param tcpPort
+    * @param writeBufferSize One buffer of this size is allocated. Objects are serialized to the write buffer where the bytes are
+    *           queued until they can be written to the TCP socket.
+    *           <p>
+    *           Normally the socket is writable and the bytes are written immediately. If the socket cannot be written to and
+    *           enough serialized objects are queued to overflow the buffer, then the connection will be closed.
+    *           <p>
+    *           The write buffer should be sized at least as large as the largest object that will be sent, plus some head room to
+    *           allow for some serialized objects to be queued in case the buffer is temporarily not writable. The amount of head
+    *           room needed is dependent upon the size of objects being sent and how often they are sent.
+    * @param objectBufferSize One (using only TCP) or three (using both TCP and UDP) buffers of this size are allocated. These
+    *           buffers are used to hold the bytes for a single object graph until it can be sent over the network or
+    *           deserialized.
+    *           <p>
+    *           The object buffers should be sized at least as large as the largest object that will be sent or received.
+    * @return client
+    */
+   public static KryoAdapter createClient(String serverAddress, int tcpPort, int writeBufferSize, int objectBufferSize)
    {
-      Log.TRACE();
-      Server server = new Server(16384, 8192);
+      return new KryoAdapter(serverAddress, tcpPort, writeBufferSize, objectBufferSize);
+   }
+
+   private KryoAdapter(int tcpPort, int writeBufferSize, int objectBufferSize)
+   {
+      Server server = new Server(writeBufferSize, objectBufferSize);
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
       isConnectedSupplier = () -> server.getConnections().length > 0;
@@ -68,10 +122,9 @@ public class KryoAdapter
       tcpSender = message -> server.sendToAllTCP(message);
    }
 
-   private KryoAdapter(String serverAddress, int tcpPort)
+   private KryoAdapter(String serverAddress, int tcpPort, int writeBufferSize, int objectBufferSize)
    {
-      Log.TRACE();
-      Client client = new Client(16384, 8192);
+      Client client = new Client(writeBufferSize, objectBufferSize);
       client.addListener(kryoListener);
       client.getKryo().setRegistrationRequired(false);
       isConnectedSupplier = () -> client.isConnected();
