@@ -119,8 +119,8 @@ public class KryoAdapter
          successful.setTrue();
          ExceptionTools.handle(() -> connector.run(), e ->
          {
-            LogTools.error(e.getMessage());
-            LogTools.debug("Trying to connect again...");
+            LogTools.trace(e.getMessage());
+            LogTools.trace("Trying to connect again...");
             successful.setFalse();
          });
       }
@@ -130,7 +130,7 @@ public class KryoAdapter
    {
       while (!isConnectedSupplier.getAsBoolean())
       {
-         LogTools.debug("Updating...");
+         LogTools.trace("Updating...");
          ExceptionTools.handle(() -> updater.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
       }
    }
