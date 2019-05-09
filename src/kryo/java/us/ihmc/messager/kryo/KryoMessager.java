@@ -127,7 +127,7 @@ public class KryoMessager implements Messager
          return;
       }
 
-      LogTools.debug("Submit message for topic: {}", messageTopic.getName());
+      LogTools.trace("Submit message for topic: {}", messageTopic.getName());
 
       kryoAdapter.sendTCP(message);
    }
@@ -144,7 +144,7 @@ public class KryoMessager implements Messager
 
       Topic messageTopic = messagerAPI.findTopic(message.getTopicID());
 
-      LogTools.debug("Packet received from network with message name: {}", messageTopic.getName());
+      LogTools.trace("Packet received from network with message name: {}", messageTopic.getName());
 
       List<AtomicReference<Object>> inputVariablesForTopic = inputVariablesMap.get(messageTopic);
       if (inputVariablesForTopic != null)
