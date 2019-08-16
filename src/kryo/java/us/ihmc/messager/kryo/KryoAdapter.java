@@ -117,12 +117,12 @@ public class KryoAdapter
       MutableBoolean successful = new MutableBoolean(false);
       while (!successful.getValue())
       {
-         successful.setTrue();
+         successful.setValue(true);
          ExceptionTools.handle(() -> connector.run(), e ->
          {
             LogTools.trace(e.getMessage());
             LogTools.trace("Trying to connect again...");
-            successful.setFalse();
+            successful.setValue(false);
          });
       }
    }
