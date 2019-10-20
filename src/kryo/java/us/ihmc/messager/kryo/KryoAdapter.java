@@ -1,24 +1,31 @@
 package us.ihmc.messager.kryo;
 
+import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+
+import org.apache.commons.lang3.mutable.MutableBoolean;
+
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import org.apache.commons.lang3.mutable.MutableBoolean;
+
 import us.ihmc.commons.Conversions;
 import us.ihmc.commons.RunnableThatThrows;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
 import us.ihmc.commons.exception.ExceptionTools;
 import us.ihmc.log.LogTools;
 
-import java.util.ArrayList;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-
 /**
- * <p>Unifies the API of Kryonet Server and Client. Users should aim to create one server and one client.</p>
- *
- * <p>Uses lamdas and callbacks pretty heavily since Kryonet Client and Server do not share any interfaces.</p>
+ * <p>
+ * Unifies the API of Kryonet Server and Client. Users should aim to create one server and one
+ * client.
+ * </p>
+ * <p>
+ * Uses lamdas and callbacks pretty heavily since Kryonet Client and Server do not share any
+ * interfaces.
+ * </p>
  */
 public class KryoAdapter
 {
@@ -101,14 +108,13 @@ public class KryoAdapter
    }
 
    /**
-    * Connect across to an expected instance of Kryo that is
-    * of the opposite type. If you created a server, you need to connect
-    * to a client.
+    * Connect across to an expected instance of Kryo that is of the opposite type. If you created a
+    * server, you need to connect to a client.
     */
    public void connect()
    {
-      new Thread(() -> startNonBlockingConnect()).start();  // this is the "kickstart" method required to
-      new Thread(() -> waitForConnection()).start();        // get Kryo to connect
+      new Thread(() -> startNonBlockingConnect()).start(); // this is the "kickstart" method required to
+      new Thread(() -> waitForConnection()).start(); // get Kryo to connect
    }
 
    private void startNonBlockingConnect()
@@ -137,8 +143,8 @@ public class KryoAdapter
    }
 
    /**
-    * Closes all open connections and the server port(s) if applicable.
-    * Doesn't seem to free up much memory.
+    * Closes all open connections and the server port(s) if applicable. Doesn't seem to free up much
+    * memory.
     */
    public void disconnect()
    {
@@ -146,15 +152,20 @@ public class KryoAdapter
    }
 
    /**
-    * <p>Update that must be called to receive any data and, for a server, to accept new connections.</p>
-    *
-    * <p>For a server: Accepts any new connections and reads or writes any pending data for the current connections.
-    * Wait for up to 250 milliseconds for a connection to be ready to process. May be zero to return
-    * immediately if there are no connections to process.</p><br>
-    *
-    * <p>For a client: Reads or writes any pending data for this client. Multiple threads should not call this method at the same time.
-    * Wait for up to 250 milliseconds for data to be ready to process. May be zero to return immediately
-    * if there is no data to process.</p>
+    * <p>
+    * Update that must be called to receive any data and, for a server, to accept new connections.
+    * </p>
+    * <p>
+    * For a server: Accepts any new connections and reads or writes any pending data for the current
+    * connections. Wait for up to 250 milliseconds for a connection to be ready to process. May be zero
+    * to return immediately if there are no connections to process.
+    * </p>
+    * <br>
+    * <p>
+    * For a client: Reads or writes any pending data for this client. Multiple threads should not call
+    * this method at the same time. Wait for up to 250 milliseconds for data to be ready to process.
+    * May be zero to return immediately if there is no data to process.
+    * </p>
     */
    public void update()
    {
@@ -199,5 +210,10 @@ public class KryoAdapter
    public void addConnectionStateListener(Consumer<Boolean> connectionStateListener)
    {
       connectionStateListeners.add(connectionStateListener);
+   }
+
+   public boolean removeConnectionStateListener(Consumer<Boolean> connectionStateListener)
+   {
+      return connectionStateListeners.remove(connectionStateListener);
    }
 }

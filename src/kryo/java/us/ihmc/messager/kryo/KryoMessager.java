@@ -1,5 +1,15 @@
 package us.ihmc.messager.kryo;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+
 import us.ihmc.log.LogTools;
 import us.ihmc.messager.Message;
 import us.ihmc.messager.Messager;
@@ -8,20 +18,11 @@ import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.MessagerStateListener;
 import us.ihmc.messager.TopicListener;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 /**
- * A {@link Messager} implementation that uses Kryonet under the hood.
- *
- * With Kryo there must be a server and a client, so {@link KryoMessager#createServer} needs to be
- * called on one side and {@link KryoMessager#createClient} on the other.
- *
- * Sometimes the requested port is unavailable and you will need to select another.
+ * A {@link Messager} implementation that uses Kryonet under the hood. With Kryo there must be a
+ * server and a client, so {@link KryoMessager#createServer} needs to be called on one side and
+ * {@link KryoMessager#createClient} on the other. Sometimes the requested port is unavailable and
+ * you will need to select another.
  */
 public class KryoMessager implements Messager
 {
@@ -34,17 +35,18 @@ public class KryoMessager implements Messager
 
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
    private final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
-   private final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
+   private final Map<MessagerStateListener, Consumer<Boolean>> connectionStateListeners = new HashMap<>();
 
    private boolean allowSelfSubmit = true;
 
    /**
     * Creates a KryoMessager server side using
-    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the hood.
+    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the
+    * hood.
     *
-    * @param messagerAPI the Messager API
-    * @param tcpPort to host the server on
-    * @param name of the update thread
+    * @param messagerAPI        the Messager API
+    * @param tcpPort            to host the server on
+    * @param name               of the update thread
     * @param updatePeriodMillis how often to update this messager
     * @return new Kryo Messager
     */
@@ -54,11 +56,12 @@ public class KryoMessager implements Messager
    }
 
    /**
-    * Creates a KryoMessager server that provides the user with a Runnable through {@link MessagerUpdateThread}
-    * that updates the Kryo internals. The user is responsible for calling that runnable periodically.
+    * Creates a KryoMessager server that provides the user with a Runnable through
+    * {@link MessagerUpdateThread} that updates the Kryo internals. The user is responsible for calling
+    * that runnable periodically.
     *
-    * @param messagerAPI the Messager API
-    * @param tcpPort to host the server on
+    * @param messagerAPI          the Messager API
+    * @param tcpPort              to host the server on
     * @param messagerUpdateThread for using your own thread scheduler or for manual calls for testing
     * @return new Kryo Messager
     */
@@ -69,14 +72,13 @@ public class KryoMessager implements Messager
 
    /**
     * Creates a KryoMessager client side using
-    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the hood.
+    * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)} under the
+    * hood. The client side requires an address i.e. "localhost" or "192.168.1.3", etc.
     *
-    * The client side requires an address i.e. "localhost" or "192.168.1.3", etc.
-    *
-    * @param messagerAPI the Messager API
-    * @param serverAddress of the host to connect to, an IP address or domain
-    * @param tcpPort port that the server is bound to
-    * @param name of the update thread
+    * @param messagerAPI        the Messager API
+    * @param serverAddress      of the host to connect to, an IP address or domain
+    * @param tcpPort            port that the server is bound to
+    * @param name               of the update thread
     * @param updatePeriodMillis how often to update this messager
     * @return new Kryo Messager
     */
@@ -86,12 +88,13 @@ public class KryoMessager implements Messager
    }
 
    /**
-    * Creates a KryoMessager client that provides the user with a Runnable through {@link MessagerUpdateThread}
-    * that updates the Kryo internals. The user is responsible for calling that runnable periodically.
+    * Creates a KryoMessager client that provides the user with a Runnable through
+    * {@link MessagerUpdateThread} that updates the Kryo internals. The user is responsible for calling
+    * that runnable periodically.
     *
-    * @param messagerAPI the Messager API
-    * @param serverAddress of the host to connect to, an IP address or domain
-    * @param tcpPort port that the server is bound to
+    * @param messagerAPI          the Messager API
+    * @param serverAddress        of the host to connect to, an IP address or domain
+    * @param tcpPort              port that the server is bound to
     * @param messagerUpdateThread for using your own thread scheduler or for manual calls for testing
     * @return new Kryo Messager
     */
@@ -109,7 +112,7 @@ public class KryoMessager implements Messager
       kryoAdapter.setReceivedListener(object -> receiveMessage(object));
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
    @Override
    public <T> void submitMessage(Message<T> message)
    {
@@ -132,6 +135,7 @@ public class KryoMessager implements Messager
       kryoAdapter.sendTCP(message);
    }
 
+   @SuppressWarnings("rawtypes")
    private void receiveMessage(Object object)
    {
       if (object == null || !(object instanceof Message))
@@ -155,7 +159,8 @@ public class KryoMessager implements Messager
          topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
@@ -171,7 +176,19 @@ public class KryoMessager implements Messager
       return boundVariable;
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
+   @Override
+   public <T> boolean removeInput(Topic<T> topic, AtomicReference<T> input)
+   {
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(topic);
+      if (boundVariablesForTopic == null)
+         return false;
+      else
+         return boundVariablesForTopic.remove(input);
+   }
+
+   /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
@@ -184,7 +201,18 @@ public class KryoMessager implements Messager
       topicListeners.add((TopicListener<Object>) listener);
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
+   @Override
+   public <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener)
+   {
+      List<TopicListener<Object>> topicListeners = topicListenersMap.get(topic);
+      if (topicListeners == null)
+         return false;
+      else
+         return topicListeners.remove(listener);
+   }
+
+   /** {@inheritDoc} */
    @Override
    public void startMessager() throws Exception
    {
@@ -192,16 +220,16 @@ public class KryoMessager implements Messager
       kryoAdapter.connect();
 
       LogTools.debug("Waiting for KryoNet to connect");
-      while (!isMessagerOpen())  // this is necessary before starting the messager update thread
-      {                          // otherwise connection times out because multiple threads are calling
-         Thread.yield();         // kryo.update()
+      while (!isMessagerOpen()) // this is necessary before starting the messager update thread
+      { // otherwise connection times out because multiple threads are calling
+         Thread.yield(); // kryo.update()
       }
 
       LogTools.debug("Starting KryoNet update thread");
       messagerUpdateThread.start(() -> kryoAdapter.update());
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
    @Override
    public void closeMessager() throws Exception
    {
@@ -209,28 +237,45 @@ public class KryoMessager implements Messager
       messagerUpdateThread.stop();
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
    @Override
    public boolean isMessagerOpen()
    {
       return kryoAdapter.isConnected();
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
    @Override
    public void notifyMessagerStateListeners()
    {
-      connectionStateListeners.forEach(listener -> listener.messagerStateChanged(isMessagerOpen()));
+      connectionStateListeners.keySet().forEach(listener -> listener.messagerStateChanged(isMessagerOpen()));
    }
 
-   /** @inheritDoc */
+   /** {@inheritDoc} */
    @Override
    public void registerMessagerStateListener(MessagerStateListener listener)
    {
+      Consumer<Boolean> kryoListener = state -> listener.messagerStateChanged(state);
+      connectionStateListeners.put(listener, kryoListener);
       kryoAdapter.addConnectionStateListener(state -> listener.messagerStateChanged(state));
    }
 
-   /** @inheritDoc */
+   @Override
+   public boolean removeMessagerStateListener(MessagerStateListener listener)
+   {
+      Consumer<Boolean> kryoListener = connectionStateListeners.remove(listener);
+      if (kryoListener == null)
+      {
+         return false;
+      }
+      else
+      {
+         kryoAdapter.removeConnectionStateListener(kryoListener);
+         return true;
+      }
+   }
+
+   /** {@inheritDoc} */
    @Override
    public MessagerAPI getMessagerAPI()
    {

@@ -77,6 +77,17 @@ public class SharedMemoryMessager implements Messager
 
    /** {@inheritDoc} */
    @Override
+   public <T> boolean removeInput(Topic<T> topic, AtomicReference<T> input)
+   {
+      List<?> boundVariablesForTopic = boundVariables.get(topic);
+      if (boundVariablesForTopic == null)
+         return false;
+      else
+         return boundVariablesForTopic.remove(input);
+   }
+
+   /** {@inheritDoc} */
+   @Override
    @SuppressWarnings("unchecked")
    public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
@@ -91,10 +102,21 @@ public class SharedMemoryMessager implements Messager
 
    /** {@inheritDoc} */
    @Override
+   public <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener)
+   {
+      List<?> topicListeners = topicListenersMap.get(topic);
+      if (topicListeners == null)
+         return false;
+      else
+         return topicListeners.remove(listener);
+   }
+
+   /** {@inheritDoc} */
+   @Override
    public void startMessager()
    {
       isConnected.set(true);
-      connectionStateListeners.forEach(listener -> listener.messagerStateChanged(true));
+      notifyMessagerStateListeners();
    }
 
    /** {@inheritDoc} */
@@ -102,8 +124,7 @@ public class SharedMemoryMessager implements Messager
    public void closeMessager()
    {
       isConnected.set(false);
-      connectionStateListeners.forEach(listener -> listener.messagerStateChanged(false));
-      boundVariables.clear();
+      notifyMessagerStateListeners();
    }
 
    /** {@inheritDoc} */
@@ -118,6 +139,13 @@ public class SharedMemoryMessager implements Messager
    public void registerMessagerStateListener(MessagerStateListener listener)
    {
       connectionStateListeners.add(listener);
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public boolean removeMessagerStateListener(MessagerStateListener listener)
+   {
+      return connectionStateListeners.remove(listener);
    }
 
    /** {@inheritDoc} */
