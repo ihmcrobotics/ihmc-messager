@@ -1,12 +1,12 @@
 plugins {
-   id("us.ihmc.ihmc-build") version "0.16.5"
-   id("us.ihmc.ihmc-ci") version "4.25"
-   id("us.ihmc.ihmc-cd") version "0.1"
+   id("us.ihmc.ihmc-build") version "0.19.7"
+   id("us.ihmc.ihmc-ci") version "5.0"
+   id("us.ihmc.ihmc-cd") version "1.7"
 }
 
 ihmc {
    group = "us.ihmc"
-   version = "0.1.1"
+   version = "0.1.2"
    vcsUrl = "https://github.com/ihmcrobotics/ihmc-messager"
    openSource = true
 
@@ -21,7 +21,7 @@ mainDependencies {
 
 kryoDependencies {
    compile ihmc.sourceSetProject("main")
-   compile group: "com.esotericsoftware", name: "kryonet", version: "2.22.0-RC1"
+   api("com.esotericsoftware:kryonet:2.22.0-RC1")
 }
 
 examplesDependencies {
@@ -31,5 +31,5 @@ examplesDependencies {
 testDependencies {
    compile ihmc.sourceSetProject("kryo")
    compile ihmc.sourceSetProject("examples")
-   compile group: "us.ihmc", name: "ihmc-commons-testing", version: "0.26.3"
+   api("us.ihmc:ihmc-commons-testing:0.26.6")
 }

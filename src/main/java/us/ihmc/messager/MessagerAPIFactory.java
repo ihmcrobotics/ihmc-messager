@@ -599,7 +599,7 @@ public class MessagerAPIFactory
 
    /**
     * A topic can be used to provide additional information to data when sending a
-    * {@link REAMessage}.
+    * {@link Message}.
     * 
     * @author Sylvain Bertrand
     *

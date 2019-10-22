@@ -16,7 +16,7 @@ public interface Messager
    /**
     * Sends data for a given topic.
     * 
-    * @param topic the topic of the data.
+    * @param topic          the topic of the data.
     * @param messageContent the data.
     */
    default <T> void submitMessage(Topic<T> topic, T messageContent)
@@ -32,18 +32,18 @@ public interface Messager
    <T> void submitMessage(Message<T> message);
 
    /**
-    * Creates a variable which is to be automatically updated when this messager receives data
-    * destined to the given topic.
+    * Creates a variable which is to be automatically updated when this messager receives data destined
+    * to the given topic.
     * 
-    * @param topic the topic to listen to.
+    * @param topic        the topic to listen to.
     * @param initialValue the initial value of the newly created variable.
     * @return a variable that is updated automatically when receiving new data.
     */
    <T> AtomicReference<T> createInput(Topic<T> topic, T initialValue);
 
    /**
-    * Creates a variable which is to be automatically updated when this messager receives data
-    * destined to the given topic.
+    * Creates a variable which is to be automatically updated when this messager receives data destined
+    * to the given topic.
     * 
     * @param topic the topic to listen to.
     * @return a variable that is updated automatically when receiving new data.
@@ -54,12 +54,32 @@ public interface Messager
    }
 
    /**
+    * Removes an input that was previously created by this messager.
+    * 
+    * @param topic the topic the input is listening to.
+    * @param input the input to be removed from this messager.
+    * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
+    *         otherwise.
+    */
+   <T> boolean removeInput(Topic<T> topic, AtomicReference<T> input);
+
+   /**
     * Registers a listener to be notified when new data is received for the given topic.
     * 
-    * @param topic the topic to listen to.
+    * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
    <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener);
+
+   /**
+    * Removes a listener that was previously registered to this messager.
+    * 
+    * @param topic    the topic the listener is listening to.
+    * @param listener the listener to be removed.
+    * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
+    *         otherwise.
+    */
+   <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener);
 
    /**
     * Opens this messager to start sending and receiving messages.
@@ -70,6 +90,7 @@ public interface Messager
 
    /**
     * Closes this messager, no message can be sent once a messager is closed.
+    * 
     * @throws Exception depends on the implementation of messager.
     */
    void closeMessager() throws Exception;
@@ -92,6 +113,15 @@ public interface Messager
     * @param listener the listener to register.
     */
    void registerMessagerStateListener(MessagerStateListener listener);
+
+   /**
+    * Removes a listener previously registered to this messager.
+    * 
+    * @param listener the listener to remove.
+    * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
+    *         otherwise.
+    */
+   boolean removeMessagerStateListener(MessagerStateListener listener);
 
    /**
     * Gets the API used by this messager.
