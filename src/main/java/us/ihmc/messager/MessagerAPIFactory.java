@@ -55,8 +55,7 @@ public class MessagerAPIFactory
    /**
     * Allows to combine multiple APIs together.
     * <p>
-    * This effectively adds the root categories of the given APIs and adds them to the API being
-    * built.
+    * This effectively adds the root categories of the given APIs and adds them to the API being built.
     * </p>
     * <p>
     * The root categories of each API must have unique names.
@@ -150,7 +149,6 @@ public class MessagerAPIFactory
     * This represent an API that can be used to create messager.
     * 
     * @author Sylvain Bertrand
-    *
     */
    public static class MessagerAPI
    {
@@ -203,8 +201,7 @@ public class MessagerAPIFactory
        * Tests whether this API declares a topic with an ID equal to the given message ID.
        * 
        * @param topicID the query.
-       * @return {@code true} if this API declares a topic with the given ID, {@code false}
-       *         otherwise.
+       * @return {@code true} if this API declares a topic with the given ID, {@code false} otherwise.
        */
       public boolean containsTopic(TopicID topicID)
       {
@@ -216,6 +213,19 @@ public class MessagerAPIFactory
          return false;
       }
 
+      /**
+       * Collects and returns all the topics declared by this API.
+       * 
+       * @return all the topics of this API.
+       */
+      public List<Topic<?>> getAllTopics()
+      {
+         List<Topic<?>> topics = new ArrayList<>();
+         for (Category root : roots)
+            topics.addAll(root.getAllTopics());
+         return topics;
+      }
+
       @Override
       public String toString()
       {
@@ -224,8 +234,8 @@ public class MessagerAPIFactory
    }
 
    /**
-    * A category theme is used to create a category via {@link Category#child(CategoryTheme)} which
-    * in turn can be used to create a topic.
+    * A category theme is used to create a category via {@link Category#child(CategoryTheme)} which in
+    * turn can be used to create a topic.
     * 
     * @author Sylvain Bertrand
     */
@@ -354,7 +364,6 @@ public class MessagerAPIFactory
     * A typed topic theme is a topic theme to which a type can be associated.
     * 
     * @author Sylvain Bertrand
-    *
     * @param <T> the type to associate with this topic theme.
     */
    public class TypedTopicTheme<T> extends TopicTheme
@@ -489,6 +498,20 @@ public class MessagerAPIFactory
       }
 
       /**
+       * Collects all the topics in this category and sub-categories.
+       * 
+       * @return the list of all the topics contained in the subtree starting from this category.
+       */
+      public List<Topic<?>> getAllTopics()
+      {
+         List<Topic<?>> topics = new ArrayList<>();
+         topics.addAll(childrenTopics.valueCollection());
+         for (Category childCategory : childrenCategories.valueCollection())
+            topics.addAll(childCategory.getAllTopics());
+         return topics;
+      }
+
+      /**
        * Search for the topic corresponding to the given ID.
        * 
        * @param topicID the query.
@@ -598,11 +621,9 @@ public class MessagerAPIFactory
    }
 
    /**
-    * A topic can be used to provide additional information to data when sending a
-    * {@link Message}.
+    * A topic can be used to provide additional information to data when sending a {@link Message}.
     * 
     * @author Sylvain Bertrand
-    *
     * @param <T> the type associated to this topic.
     */
    public static class Topic<T>
@@ -688,8 +709,8 @@ public class MessagerAPIFactory
     * When using the messager over network, it is preferable to send {@link Topic} information using
     * simple data types such as {@link TopicID} instead of directly sending the topic itself.
     * <p>
-    * The ID of a topic can be via {@link Topic#getUniqueID()} and the topic can be retrieved using
-    * its ID via {@link MessagerAPI#findTopic(TopicID)}.
+    * The ID of a topic can be via {@link Topic#getUniqueID()} and the topic can be retrieved using its
+    * ID via {@link MessagerAPI#findTopic(TopicID)}.
     * </p>
     * 
     * @author Sylvain Bertrand
