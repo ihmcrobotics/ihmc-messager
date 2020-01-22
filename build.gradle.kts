@@ -15,21 +15,21 @@ ihmc {
 }
 
 mainDependencies {
-   api group: "net.sf.trove4j", name: "trove4j", version: "3.0.3"
-   api group: "us.ihmc", name: "ihmc-commons", version: "0.26.6"
+   api("net.sf.trove4j:trove4j:3.0.3")
+   api("us.ihmc:ihmc-commons:0.26.6")
 }
 
 kryoDependencies {
-   compile ihmc.sourceSetProject("main")
+   api(ihmc.sourceSetProject("main"))
    api("com.esotericsoftware:kryonet:2.22.0-RC1")
 }
 
 examplesDependencies {
-   compile ihmc.sourceSetProject("main")
+   api(ihmc.sourceSetProject("main"))
 }
 
 testDependencies {
-   compile ihmc.sourceSetProject("kryo")
-   compile ihmc.sourceSetProject("examples")
+   api(ihmc.sourceSetProject("kryo"))
+   api(ihmc.sourceSetProject("examples"))
    api("us.ihmc:ihmc-commons-testing:0.26.6")
 }
