@@ -1,9 +1,12 @@
 package us.ihmc.messager.kryo;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import com.esotericsoftware.minlog.Log;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.esotericsoftware.kryonet.Client;
@@ -15,6 +18,7 @@ import us.ihmc.commons.Conversions;
 import us.ihmc.commons.RunnableThatThrows;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
 import us.ihmc.commons.exception.ExceptionTools;
+import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 
 /**
@@ -38,6 +42,15 @@ public class KryoAdapter
    private final RunnableThatThrows connector;
    private final RunnableThatThrows disconnector;
    private final Consumer tcpSender;
+   private final Supplier<InetSocketAddress> remoteAddressSupplier;
+
+   private enum Type { Server, Client }
+   private final Type type;
+
+   static
+   {
+      Log.WARN(); // Set minlog level
+   }
 
    /**
     * Create a Kryonet server.
@@ -72,6 +85,8 @@ public class KryoAdapter
       connector = () -> server.bind(tcpPort);
       disconnector = () -> server.close();
       tcpSender = message -> server.sendToAllTCP(message);
+      remoteAddressSupplier = () -> server.getConnections()[0].getRemoteAddressTCP();
+      type = Type.Server;
    }
 
    private KryoAdapter(String serverAddress, int tcpPort)
@@ -84,6 +99,8 @@ public class KryoAdapter
       connector = () -> client.connect(5000, serverAddress, tcpPort);
       disconnector = () -> client.close();
       tcpSender = message -> client.sendTCP(message);
+      remoteAddressSupplier = () -> client.getRemoteAddressTCP();
+      type = Type.Client;
    }
 
    class KryoListener extends Listener
@@ -113,8 +130,8 @@ public class KryoAdapter
     */
    public void connect()
    {
-      new Thread(() -> startNonBlockingConnect()).start(); // this is the "kickstart" method required to
-      new Thread(() -> waitForConnection()).start(); // get Kryo to connect
+      new Thread(() -> startNonBlockingConnect()).start(); // this is the "kickstart" method required to get Kryo to connect
+      new Thread(() -> waitForConnection()).start();
    }
 
    private void startNonBlockingConnect()
@@ -130,6 +147,11 @@ public class KryoAdapter
             LogTools.trace("Trying to connect again...");
             successful.setFalse();
          });
+
+         if (!successful.getValue())
+         {
+            ThreadTools.sleep(200); // prevent free spinning loop
+         }
       }
    }
 
@@ -140,6 +162,8 @@ public class KryoAdapter
          LogTools.trace("Updating...");
          ExceptionTools.handle(() -> updater.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
       }
+
+      LogTools.info(type.name() + " connected to " + remoteAddressSupplier.get());
    }
 
    /**
