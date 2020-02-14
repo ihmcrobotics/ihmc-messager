@@ -2,6 +2,7 @@ package us.ihmc.messager.kryo;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -80,6 +81,7 @@ public class KryoAdapter
       Server server = new Server(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
+      server.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
       isConnectedSupplier = () -> server.getConnections().length > 0;
       updater = () -> server.update(250);
       connector = () -> server.bind(tcpPort);
@@ -94,6 +96,7 @@ public class KryoAdapter
       Client client = new Client(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
       client.addListener(kryoListener);
       client.getKryo().setRegistrationRequired(false);
+      client.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
       isConnectedSupplier = () -> client.isConnected();
       updater = () -> client.update(250);
       connector = () -> client.connect(5000, serverAddress, tcpPort);
