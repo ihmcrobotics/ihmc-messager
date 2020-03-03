@@ -16,7 +16,7 @@ ihmc {
 
 mainDependencies {
    api("net.sf.trove4j:trove4j:3.0.3")
-   api("us.ihmc:ihmc-commons:0.26.6")
+   api("us.ihmc:ihmc-commons:0.27.0")
 }
 
 kryoDependencies {
@@ -31,5 +31,5 @@ examplesDependencies {
 testDependencies {
    api(ihmc.sourceSetProject("kryo"))
    api(ihmc.sourceSetProject("examples"))
-   api("us.ihmc:ihmc-commons-testing:0.26.6")
+   api("us.ihmc:ihmc-commons-testing:0.27.0")
 }
