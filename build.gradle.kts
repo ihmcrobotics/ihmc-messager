@@ -31,5 +31,5 @@ examplesDependencies {
 testDependencies {
    api(ihmc.sourceSetProject("kryo"))
    api(ihmc.sourceSetProject("examples"))
-   api("us.ihmc:ihmc-commons-testing:0.29.0")
+   api("us.ihmc:ihmc-commons-testing:0.30.0")
 }
