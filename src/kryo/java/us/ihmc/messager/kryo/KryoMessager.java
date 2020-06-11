@@ -160,7 +160,6 @@ public class KryoMessager implements Messager
    }
 
    /** {@inheritDoc} */
-   @SuppressWarnings("unchecked")
    @Override
    public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
