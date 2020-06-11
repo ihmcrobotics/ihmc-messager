@@ -60,19 +60,19 @@ public class SharedMemoryMessager implements Messager
 
    /** {@inheritDoc} */
    @Override
-   @SuppressWarnings("unchecked")
    public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
-
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(topic);
-      if (boundVariablesForTopic == null)
-      {
-         boundVariablesForTopic = new ArrayList<>();
-         boundVariables.put(topic, boundVariablesForTopic);
-      }
-      boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
+      attachInput(topic, boundVariable);
       return boundVariable;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public <T> void attachInput(Topic<T> topic, AtomicReference<T> input)
+   {
+      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.computeIfAbsent(topic, k -> new ArrayList<>());
+      boundVariablesForTopic.add((AtomicReference<Object>) input);
    }
 
    /** {@inheritDoc} */
