@@ -42,6 +42,15 @@ public interface Messager
    <T> AtomicReference<T> createInput(Topic<T> topic, T initialValue);
 
    /**
+    * Attaches an existing AtomicReference as an input which is to be automatically updated when this messager
+    * receives data destined to the given topic.
+    *
+    * @param topic        the topic to listen to.
+    * @param input        an existing AtomicReference.
+    */
+   <T> void attachInput(Topic<T> topic, AtomicReference<T> input);
+
+   /**
     * Creates a variable which is to be automatically updated when this messager receives data destined
     * to the given topic.
     * 

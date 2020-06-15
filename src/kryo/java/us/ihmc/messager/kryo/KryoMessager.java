@@ -109,7 +109,7 @@ public class KryoMessager implements Messager
       this.kryoAdapter = kryoAdapter;
       this.messagerUpdateThread = messagerUpdateThread;
 
-      kryoAdapter.setReceivedListener(object -> receiveMessage(object));
+      kryoAdapter.setReceivedListener(this::receiveMessage);
    }
 
    /** {@inheritDoc} */
@@ -138,7 +138,7 @@ public class KryoMessager implements Messager
    @SuppressWarnings("rawtypes")
    private void receiveMessage(Object object)
    {
-      if (object == null || !(object instanceof Message))
+      if (!(object instanceof Message))
          return;
 
       Message message = (Message) object;
@@ -160,20 +160,20 @@ public class KryoMessager implements Messager
    }
 
    /** {@inheritDoc} */
-   @SuppressWarnings("unchecked")
    @Override
    public <T> AtomicReference<T> createInput(Topic<T> topic, T defaultValue)
    {
       AtomicReference<T> boundVariable = new AtomicReference<>(defaultValue);
-
-      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.get(topic);
-      if (boundVariablesForTopic == null)
-      {
-         boundVariablesForTopic = new ArrayList<>();
-         inputVariablesMap.put(topic, boundVariablesForTopic);
-      }
-      boundVariablesForTopic.add((AtomicReference<Object>) boundVariable);
+      attachInput(topic, boundVariable);
       return boundVariable;
+   }
+
+   /** {@inheritDoc} */
+   @Override
+   public <T> void attachInput(Topic<T> topic, AtomicReference<T> input)
+   {
+      List<AtomicReference<Object>> boundVariablesForTopic = inputVariablesMap.computeIfAbsent(topic, k -> new ArrayList<>());
+      boundVariablesForTopic.add((AtomicReference<Object>) input);
    }
 
    /** {@inheritDoc} */
@@ -192,12 +192,7 @@ public class KryoMessager implements Messager
    @Override
    public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
-      List<TopicListener<Object>> topicListeners = topicListenersMap.get(topic);
-      if (topicListeners == null)
-      {
-         topicListeners = new ArrayList<>();
-         topicListenersMap.put(topic, topicListeners);
-      }
+      List<TopicListener<Object>> topicListeners = topicListenersMap.computeIfAbsent(topic, k -> new ArrayList<>());
       topicListeners.add((TopicListener<Object>) listener);
    }
 
@@ -226,7 +221,7 @@ public class KryoMessager implements Messager
       }
 
       LogTools.debug("Starting KryoNet update thread");
-      messagerUpdateThread.start(() -> kryoAdapter.update());
+      messagerUpdateThread.start(kryoAdapter::update);
    }
 
    /** {@inheritDoc} */
@@ -255,9 +250,9 @@ public class KryoMessager implements Messager
    @Override
    public void registerMessagerStateListener(MessagerStateListener listener)
    {
-      Consumer<Boolean> kryoListener = state -> listener.messagerStateChanged(state);
+      Consumer<Boolean> kryoListener = listener::messagerStateChanged;
       connectionStateListeners.put(listener, kryoListener);
-      kryoAdapter.addConnectionStateListener(state -> listener.messagerStateChanged(state));
+      kryoAdapter.addConnectionStateListener(listener::messagerStateChanged);
    }
 
    @Override
