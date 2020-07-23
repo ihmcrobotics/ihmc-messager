@@ -126,7 +126,7 @@ public class KryoMessager implements Messager
 
       if (!kryoAdapter.isConnected())
       {
-         LogTools.warn("This messager is closed, message's topic: " + messageTopic.getName());
+         LogTools.warn(1, "This messager is closed, message's topic: " + messageTopic.getName());
          return;
       }
 
