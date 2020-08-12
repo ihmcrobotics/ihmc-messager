@@ -133,8 +133,9 @@ public class KryoAdapter
     */
    public void connect()
    {
-      new Thread(() -> startNonBlockingConnect()).start(); // this is the "kickstart" method required to get Kryo to connect
-      new Thread(() -> waitForConnection()).start();
+      // this is the "kickstart" method required to get Kryo to connect
+      ThreadTools.startAsDaemon(this::startNonBlockingConnect, getClass().getSimpleName() + "NonBlockingConnect");
+      ThreadTools.startAsDaemon(this::waitForConnection, getClass().getSimpleName() + "WaitForConnection");
    }
 
    private void startNonBlockingConnect()
@@ -144,7 +145,7 @@ public class KryoAdapter
       while (!successful.getValue())
       {
          successful.setValue(true);
-         ExceptionTools.handle(() -> connector.run(), e ->
+         ExceptionTools.handle(connector, e ->
          {
             LogTools.trace(e.getMessage());
             LogTools.trace("Trying to connect again...");
@@ -163,7 +164,7 @@ public class KryoAdapter
       while (!isConnectedSupplier.getAsBoolean())
       {
          LogTools.trace("Updating...");
-         ExceptionTools.handle(() -> updater.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
+         ExceptionTools.handle(updater, DefaultExceptionHandler.RUNTIME_EXCEPTION);
       }
 
       LogTools.info(type.name() + " connected to " + remoteAddressSupplier.get());
@@ -175,7 +176,7 @@ public class KryoAdapter
     */
    public void disconnect()
    {
-      ExceptionTools.handle(() -> disconnector.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
+      ExceptionTools.handle(disconnector, DefaultExceptionHandler.RUNTIME_EXCEPTION);
    }
 
    /**
@@ -196,7 +197,7 @@ public class KryoAdapter
     */
    public void update()
    {
-      ExceptionTools.handle(() -> updater.run(), DefaultExceptionHandler.RUNTIME_EXCEPTION);
+      ExceptionTools.handle(updater, DefaultExceptionHandler.RUNTIME_EXCEPTION);
    }
 
    /**
