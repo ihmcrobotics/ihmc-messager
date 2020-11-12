@@ -147,8 +147,16 @@ public class KryoAdapter
          successful.setValue(true);
          ExceptionTools.handle(connector, e ->
          {
-            LogTools.trace(e.getMessage());
-            LogTools.trace("Trying to connect again...");
+            if (e.getMessage().contains("Address already in use"))
+            {
+               LogTools.error(e.getMessage());
+               LogTools.info("Trying to connect again...");
+            }
+            else
+            {
+               LogTools.trace(e.getMessage());
+               LogTools.trace("Trying to connect again...");
+            }
             successful.setFalse();
          });
 
