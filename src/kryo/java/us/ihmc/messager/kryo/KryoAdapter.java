@@ -15,6 +15,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 
+import org.apache.logging.log4j.Level;
 import us.ihmc.commons.Conversions;
 import us.ihmc.commons.RunnableThatThrows;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
@@ -34,6 +35,9 @@ import us.ihmc.log.LogTools;
  */
 public class KryoAdapter
 {
+   private Server server;
+   private Client client;
+
    private Listener kryoListener = new KryoListener();
    private Consumer receivedConsumer;
    private final ArrayList<Consumer> connectionStateListeners = new ArrayList<>();
@@ -50,7 +54,30 @@ public class KryoAdapter
 
    static
    {
-      Log.WARN(); // Set minlog level
+      Level log4jLevel = LogTools.getLevel();
+      int minLogLevel = 4;
+      switch (log4jLevel.getStandardLevel())
+      {
+         case OFF:
+            minLogLevel = 6;
+            break;
+         case FATAL:
+         case ERROR:
+            minLogLevel = 5;
+            break;
+         case WARN:
+         case INFO: // Kryonet info is pretty verbose
+            minLogLevel = 4;
+            break;
+         case DEBUG:
+            minLogLevel = 2;
+            break;
+         case TRACE:
+         case ALL:
+            minLogLevel = 1;
+            break;
+      }
+      Log.set(minLogLevel); // Set minlog level
    }
 
    /**
@@ -78,7 +105,7 @@ public class KryoAdapter
 
    private KryoAdapter(int tcpPort)
    {
-      Server server = new Server(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
+      server = new Server(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
       server.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
@@ -93,7 +120,7 @@ public class KryoAdapter
 
    private KryoAdapter(String serverAddress, int tcpPort)
    {
-      Client client = new Client(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
+      client = new Client(Conversions.megabytesToBytes(8), Conversions.megabytesToBytes(2));
       client.addListener(kryoListener);
       client.getKryo().setRegistrationRequired(false);
       client.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
