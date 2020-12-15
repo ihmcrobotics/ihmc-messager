@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import us.ihmc.commons.exception.ExceptionTools;
+import us.ihmc.commons.thread.ThreadTools;
 import us.ihmc.log.LogTools;
 import us.ihmc.messager.Message;
 import us.ihmc.messager.Messager;
@@ -17,6 +19,8 @@ import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.MessagerStateListener;
 import us.ihmc.messager.TopicListener;
+
+import static us.ihmc.commons.exception.DefaultExceptionHandler.RUNTIME_EXCEPTION;
 
 /**
  * A {@link Messager} implementation that uses Kryonet under the hood. With Kryo there must be a
@@ -207,9 +211,21 @@ public class KryoMessager implements Messager
          return topicListeners.remove(listener);
    }
 
-   /** {@inheritDoc} */
+   /**
+    * Starts the messager, blocking until it's started.
+    *
+    * {@inheritDoc}
+    */
    @Override
    public void startMessager() throws Exception
+   {
+      startMessagerBlocking();
+   }
+
+   /**
+    * Starts the messager, blocking until it's started.
+    */
+   public void startMessagerBlocking()
    {
       LogTools.debug("Starting to connect KryoNet");
       kryoAdapter.connect();
@@ -222,6 +238,14 @@ public class KryoMessager implements Messager
 
       LogTools.debug("Starting KryoNet update thread");
       messagerUpdateThread.start(kryoAdapter::update);
+   }
+
+   /**
+    * Starts the messager asyncronously. This may cause initial bugs if your application does not wait for startup.
+    */
+   public void startMessagerAsyncronously()
+   {
+      ThreadTools.startAThread(() -> ExceptionTools.handle(this::startMessager, RUNTIME_EXCEPTION), "KryoMessagerAsyncConnectionThread");
    }
 
    /** {@inheritDoc} */
