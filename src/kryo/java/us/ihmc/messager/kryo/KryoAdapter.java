@@ -107,7 +107,7 @@ public class KryoAdapter
 
    private KryoAdapter(int tcpPort)
    {
-      server = new Server(Conversions.megabytesToBytes(200), Conversions.megabytesToBytes(100));
+      server = new Server(Conversions.megabytesToBytes(512), Conversions.megabytesToBytes(256));
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
       server.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
@@ -122,7 +122,7 @@ public class KryoAdapter
 
    private KryoAdapter(String serverAddress, int tcpPort)
    {
-      client = new Client(Conversions.megabytesToBytes(200), Conversions.megabytesToBytes(200));
+      client = new Client(Conversions.megabytesToBytes(512), Conversions.megabytesToBytes(256));
       client.addListener(kryoListener);
       client.getKryo().setRegistrationRequired(false);
       client.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
