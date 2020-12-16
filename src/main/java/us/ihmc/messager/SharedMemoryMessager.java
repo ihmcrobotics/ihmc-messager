@@ -45,7 +45,7 @@ public class SharedMemoryMessager implements Messager
 
       if (!isConnected.get())
       {
-         LogTools.warn("This messager is closed, message's topic: " + messageTopic.getSimpleName());
+         LogTools.trace("This messager is closed, message's topic: " + messageTopic.getSimpleName());
          return;
       }
 
