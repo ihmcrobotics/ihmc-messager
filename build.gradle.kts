@@ -6,7 +6,7 @@ plugins {
 
 ihmc {
    group = "us.ihmc"
-   version = "0.1.6"
+   version = "0.1.7"
    vcsUrl = "https://github.com/ihmcrobotics/ihmc-messager"
    openSource = true
 
@@ -17,11 +17,12 @@ ihmc {
 mainDependencies {
    api("net.sf.trove4j:trove4j:3.0.3")
    api("us.ihmc:ihmc-commons:0.30.4")
+   api("us.ihmc:log-tools:0.6.1")
 }
 
 kryoDependencies {
    api(ihmc.sourceSetProject("main"))
-   api("com.esotericsoftware:kryonet:2.22.0-RC1")
+   api("com.github.crykn:kryonet:2.22.7") // from jitpack
 }
 
 examplesDependencies {
