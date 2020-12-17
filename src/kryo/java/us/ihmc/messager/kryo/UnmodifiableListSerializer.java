@@ -15,9 +15,9 @@ import java.util.List;
 public class UnmodifiableListSerializer extends CollectionSerializer
 {
    @Override
-   protected Collection create(Kryo kryo, Input input, Class<Collection> type)
+   protected Collection create(Kryo kryo, Input input, Class type, int size)
    {
-      return new ArrayList();
+      return new ArrayList(size);
    }
 
    @Override
@@ -27,10 +27,10 @@ public class UnmodifiableListSerializer extends CollectionSerializer
    }
 
    @Override
-   public Collection read(Kryo kryo, Input input, Class<Collection> type)
+   public Collection read(Kryo kryo, Input input, Class type)
    {
       List read = (List) super.read(kryo, input, type);
-      return Collections.unmodifiableList(read);
+            return Collections.unmodifiableList(read);
    }
 
    @Override

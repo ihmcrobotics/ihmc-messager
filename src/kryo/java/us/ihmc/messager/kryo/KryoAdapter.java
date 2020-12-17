@@ -109,12 +109,12 @@ public class KryoAdapter
       server.addListener(kryoListener);
       server.getKryo().setRegistrationRequired(false);
       server.getKryo().addDefaultSerializer(Collections.unmodifiableList(Collections.emptyList()).getClass(), UnmodifiableListSerializer.class);
-      isConnectedSupplier = () -> server.getConnections().length > 0;
+      isConnectedSupplier = () -> server.getConnections().size() > 0;
       updater = () -> server.update(250);
       connector = () -> server.bind(tcpPort);
       disconnector = () -> server.close();
       tcpSender = message -> server.sendToAllTCP(message);
-      remoteAddressSupplier = () -> server.getConnections()[0].getRemoteAddressTCP();
+      remoteAddressSupplier = () -> server.getConnections().stream().findFirst().get().getRemoteAddressTCP();
       type = Type.Server;
    }
 
@@ -133,7 +133,7 @@ public class KryoAdapter
       type = Type.Client;
    }
 
-   class KryoListener extends Listener
+   class KryoListener implements Listener
    {
       @Override
       public void received(Connection connection, Object object)
