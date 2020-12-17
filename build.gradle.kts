@@ -22,7 +22,7 @@ mainDependencies {
 
 kryoDependencies {
    api(ihmc.sourceSetProject("main"))
-   api("com.esotericsoftware:kryonet:2.22.0-RC1")
+   api("com.github.crykn:kryonet:2.22.7") // from jitpack
 }
 
 examplesDependencies {
