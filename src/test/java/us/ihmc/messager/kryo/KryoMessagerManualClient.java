@@ -1,6 +1,5 @@
 package us.ihmc.messager.kryo;
 
-import org.apache.commons.lang3.mutable.MutableObject;
 import us.ihmc.commons.exception.DefaultExceptionHandler;
 import us.ihmc.commons.exception.ExceptionTools;
 import us.ihmc.log.LogTools;
@@ -11,7 +10,7 @@ import us.ihmc.messager.examples.FrenchPerson;
 
 public class KryoMessagerManualClient
 {
-   public static void main(String[] args)
+   public KryoMessagerManualClient()
    {
       int tcpPort = 54557;
       MessagerAPIFactory api = new MessagerAPIFactory();
@@ -27,5 +26,10 @@ public class KryoMessagerManualClient
       LogTools.info("Connected!");
 
       while (true) Thread.yield();
+   }
+
+   public static void main(String[] args)
+   {
+      new KryoMessagerManualClient();
    }
 }

@@ -10,7 +10,7 @@ import us.ihmc.messager.examples.FrenchPerson;
 
 public class KryoMessagerManualServer
 {
-   public static void main(String[] args)
+   public KryoMessagerManualServer()
    {
       int tcpPort = 54557;
       MessagerAPIFactory api = new MessagerAPIFactory();
@@ -27,5 +27,10 @@ public class KryoMessagerManualServer
       LogTools.info("Connected!");
 
       while (true) Thread.yield();
+   }
+
+   public static void main(String[] args)
+   {
+      new KryoMessagerManualServer();
    }
 }
