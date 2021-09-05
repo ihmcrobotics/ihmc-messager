@@ -20,7 +20,7 @@ import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.MessagerStateListener;
 import us.ihmc.messager.TopicListener;
 
-import static us.ihmc.commons.exception.DefaultExceptionHandler.MESSAGE_AND_STACKTRACE;
+import static us.ihmc.commons.exception.DefaultExceptionHandler.RUNTIME_EXCEPTION;
 
 /**
  * A {@link Messager} implementation that uses Kryonet under the hood. With Kryo there must be a
@@ -245,7 +245,7 @@ public class KryoMessager implements Messager
     */
    public void startMessagerAsyncronously()
    {
-      ThreadTools.startAThread(() -> ExceptionTools.handle(this::startMessager, MESSAGE_AND_STACKTRACE), "KryoMessagerAsyncConnectionThread");
+      ThreadTools.startAThread(() -> ExceptionTools.handle(this::startMessager, RUNTIME_EXCEPTION), "KryoMessagerAsyncConnectionThread");
    }
 
    /** {@inheritDoc} */

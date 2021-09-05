@@ -199,7 +199,7 @@ public class KryoAdapter
       while (!isConnectedSupplier.getAsBoolean())
       {
          LogTools.trace("Updating...");
-         ExceptionTools.handle(updater, DefaultExceptionHandler.MESSAGE_AND_STACKTRACE);
+         ExceptionTools.handle(updater, DefaultExceptionHandler.RUNTIME_EXCEPTION);
       }
 
       LogTools.info(type.name() + " connected to " + remoteAddressSupplier.get());
@@ -211,7 +211,7 @@ public class KryoAdapter
     */
    public void disconnect()
    {
-      ExceptionTools.handle(disconnector, DefaultExceptionHandler.MESSAGE_AND_STACKTRACE);
+      ExceptionTools.handle(disconnector, DefaultExceptionHandler.RUNTIME_EXCEPTION);
    }
 
    /**
@@ -232,7 +232,7 @@ public class KryoAdapter
     */
    public void update()
    {
-      ExceptionTools.handle(updater, DefaultExceptionHandler.MESSAGE_AND_STACKTRACE);
+      ExceptionTools.handle(updater, DefaultExceptionHandler.RUNTIME_EXCEPTION);
    }
 
    /**
