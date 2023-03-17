@@ -5,7 +5,6 @@ package us.ihmc.messager;
  * given topic.
  * 
  * @author Sylvain Bertrand
- *
  * @param <T> the data type.
  */
 public interface TopicListener<T>

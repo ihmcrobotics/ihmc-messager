@@ -68,6 +68,7 @@ public class SharedMemoryMessager implements Messager
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void attachInput(Topic<T> topic, AtomicReference<T> input)
    {

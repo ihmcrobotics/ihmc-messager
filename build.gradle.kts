@@ -20,6 +20,13 @@ mainDependencies {
    api("us.ihmc:log-tools:0.6.3")
 }
 
+javafxDependencies {
+   api(ihmc.sourceSetProject("main"))
+   var javaFXVersion = "17.0.2"
+   api(ihmc.javaFXModule("base", javaFXVersion))
+   api(ihmc.javaFXModule("graphics", javaFXVersion))
+}
+
 kryoDependencies {
    api(ihmc.sourceSetProject("main"))
    api("com.github.crykn:kryonet:2.22.7") // from jitpack
