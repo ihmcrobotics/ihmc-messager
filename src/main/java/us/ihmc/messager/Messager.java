@@ -90,7 +90,7 @@ public interface Messager
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
-   <T> void registerTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListener<T> listener);
+   <T> void addTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListener<T> listener);
 
    /**
     * Removes a listener that was previously registered to this messager.
@@ -133,7 +133,7 @@ public interface Messager
     *
     * @param listener the listener to register.
     */
-   void registerMessagerStateListener(MessagerStateListener listener);
+   void addMessagerStateListener(MessagerStateListener listener);
 
    /**
     * Removes a listener previously registered to this messager.
@@ -150,15 +150,4 @@ public interface Messager
     * @return this messger's API.
     */
    MessagerAPIFactory.MessagerAPI getMessagerAPI();
-
-   /**
-    * Indicates whether this implementation supports synchronous messages.
-    * 
-    * @return is the synchronous option is supported. Default is {@code false}.
-    * @see Message#synchronousHint
-    */
-   default boolean isSynchronousSupported()
-   {
-      return false;
-   }
 }

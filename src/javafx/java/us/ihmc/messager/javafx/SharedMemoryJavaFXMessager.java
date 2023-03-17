@@ -61,7 +61,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
 
    /** {@inheritDoc} */
    @Override
-   public <T> void registerJavaFXSyncedTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
       JavaFXSyncedTopicListeners topicListeners = javaFXSyncedTopicListeners.get(topic);
 
@@ -81,7 +81,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
       {
          try
          { // Postpone the entire registration in case JavaFXSyncedTopicListeners has been created by another caller.
-            runFXLater(() -> registerJavaFXSyncedTopicListener(topic, listener));
+            runFXLater(() -> addFXTopicListener(topic, listener));
             return;
          }
          catch (IllegalStateException e)
@@ -140,7 +140,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
 
    /** {@inheritDoc} */
    @Override
-   public <T> boolean removeJavaFXSyncedTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> boolean removeFXTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
       JavaFXSyncedTopicListeners topicListeners = javaFXSyncedTopicListeners.get(topic);
       if (topicListeners == null)
@@ -192,7 +192,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
 
       private JavaFXSyncedTopicListeners(Topic<?> topic)
       {
-         registerTopicListener(topic, message ->
+         addTopicListener(topic, message ->
          {
             if (message != null)
                inputQueue.add(message);

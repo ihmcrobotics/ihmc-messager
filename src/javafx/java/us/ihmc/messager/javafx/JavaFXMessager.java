@@ -68,7 +68,7 @@ public interface JavaFXMessager extends Messager
    default <T> TopicListener<T> bindPropertyToTopic(Topic<T> topic, Property<T> propertyToBind)
    {
       TopicListener<T> listener = messageContent -> propertyToBind.setValue(messageContent);
-      registerJavaFXSyncedTopicListener(topic, listener);
+      addFXTopicListener(topic, listener);
       return listener;
    }
 
@@ -86,7 +86,7 @@ public interface JavaFXMessager extends Messager
       MessageBidirectionalBinding<T, T> bind = MessageBidirectionalBinding.createSingleTypedBinding(messageContent -> submitMessage(topic, messageContent),
                                                                                                     property);
       property.addListener(bind);
-      registerJavaFXSyncedTopicListener(topic, bind);
+      addFXTopicListener(topic, bind);
       if (pushValue)
          submitMessage(topic, property.getValue());
       return bind;
@@ -109,15 +109,15 @@ public interface JavaFXMessager extends Messager
    {
       MessageBidirectionalBinding<M, P> bind = new MessageBidirectionalBinding<>(messageContent -> submitMessage(topic, messageContent), property, converter);
       property.addListener(bind);
-      registerJavaFXSyncedTopicListener(topic, bind);
+      addFXTopicListener(topic, bind);
       if (pushValue)
          submitMessage(topic, converter.convert(property.getValue()));
       return bind;
    }
 
    /**
-    * Same as {@link #registerTopicListener(Topic, TopicListener)} but the listener only get notified
-    * on the next rendering thread tick.
+    * Same as {@link #addTopicListener(Topic, TopicListener)} but the listener only get notified on the
+    * next rendering thread tick.
     * <p>
     * This implementation is to be used whenever the listener is to update some UI controls or scene.
     * </p>
@@ -125,16 +125,16 @@ public interface JavaFXMessager extends Messager
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
-   <T> void registerJavaFXSyncedTopicListener(Topic<T> topic, TopicListener<T> listener);
+   <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener);
 
    /**
     * Removes a listener that was previously registered to this messager via
-    * {@link #registerJavaFXSyncedTopicListener(Topic, TopicListener)}.
+    * {@link #addFXTopicListener(Topic, TopicListener)}.
     *
     * @param topic    the topic the listener is listening to.
     * @param listener the listener to be removed.
     * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
     *         otherwise.
     */
-   <T> boolean removeJavaFXSyncedTopicListener(Topic<T> topic, TopicListener<T> listener);
+   <T> boolean removeFXTopicListener(Topic<T> topic, TopicListener<T> listener);
 }

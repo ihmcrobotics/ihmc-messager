@@ -1,5 +1,7 @@
 package us.ihmc.messager.kryo;
 
+import static us.ihmc.commons.exception.DefaultExceptionHandler.RUNTIME_EXCEPTION;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +21,6 @@ import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.MessagerStateListener;
 import us.ihmc.messager.TopicListener;
-
-import static us.ihmc.commons.exception.DefaultExceptionHandler.RUNTIME_EXCEPTION;
 
 /**
  * A {@link Messager} implementation that uses Kryonet under the hood. With Kryo there must be a
@@ -173,6 +173,7 @@ public class KryoMessager implements Messager
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void attachInput(Topic<T> topic, AtomicReference<T> input)
    {
@@ -194,7 +195,7 @@ public class KryoMessager implements Messager
    /** {@inheritDoc} */
    @SuppressWarnings("unchecked")
    @Override
-   public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
       List<TopicListener<Object>> topicListeners = topicListenersMap.computeIfAbsent(topic, k -> new ArrayList<>());
       topicListeners.add((TopicListener<Object>) listener);
@@ -272,7 +273,7 @@ public class KryoMessager implements Messager
 
    /** {@inheritDoc} */
    @Override
-   public void registerMessagerStateListener(MessagerStateListener listener)
+   public void addMessagerStateListener(MessagerStateListener listener)
    {
       Consumer<Boolean> kryoListener = listener::messagerStateChanged;
       connectionStateListeners.put(listener, kryoListener);

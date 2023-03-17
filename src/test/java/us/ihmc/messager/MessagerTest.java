@@ -52,9 +52,9 @@ public class MessagerTest
 
       String[] numbers = {"un", "deux", "trois", "quatre", "cinq"};
       MutableInt count = new MutableInt();
-      messager.registerTopicListener(ListenFrench, message -> frenchPersonListensToFrench(messager, message, numbers, count));
-      messager.registerTopicListener(SpeakEnglish, message -> bilingualPersonListensToEnglish(messager, message, englishToFrenchNumbers));
-      messager.registerTopicListener(SpeakFrench, message -> bilingualPersonListensToFrench(messager, message, frenchToEnglishNumbers));
+      messager.addTopicListener(ListenFrench, message -> frenchPersonListensToFrench(messager, message, numbers, count));
+      messager.addTopicListener(SpeakEnglish, message -> bilingualPersonListensToEnglish(messager, message, englishToFrenchNumbers));
+      messager.addTopicListener(SpeakFrench, message -> bilingualPersonListensToFrench(messager, message, frenchToEnglishNumbers));
 
       LogTools.info("Latest french the english heard: {}", frenchInput.get());
       LogTools.info("Latest english the french heard: {}", englishInput.get());
