@@ -1,14 +1,11 @@
 package us.ihmc.messager.javafx;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
-
-import com.sun.javafx.application.PlatformImpl;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -68,29 +65,77 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    {
       JavaFXSyncedTopicListeners topicListeners = javaFXSyncedTopicListeners.get(topic);
 
-      if (topicListeners == null)
+      if (topicListeners != null)
       {
-         JavaFXSyncedTopicListeners newTopicListeners = new JavaFXSyncedTopicListeners(topic);
-         topicListeners = newTopicListeners;
-
-         if (!readingListeners && Platform.isFxApplicationThread())
-         { // It appears to not be enough to check for application thread somehow.
-            javaFXSyncedTopicListeners.put(topic, newTopicListeners);
-         }
-         else // The following one can throw an exception if the JavaFX thread has not started yet.
-         {
-            try
-            { // Postpone the entire registration in case JavaFXSyncedTopicListeners has been created by another caller.
-               Platform.runLater(() -> registerJavaFXSyncedTopicListener(topic, listener));
-            }
-            catch (IllegalStateException e)
-            { // The JavaFX thread has not started yet, no need to invoke Platform.runLater(...).
-               javaFXSyncedTopicListeners.put(topic, newTopicListeners);
-            }
-         }
+         topicListeners.addListener(listener);
+         return;
       }
 
-      topicListeners.addListener(listener);
+      if (!readingListeners && Platform.isFxApplicationThread())
+      { // It appears to not be enough to check for application thread somehow.
+         topicListeners = new JavaFXSyncedTopicListeners(topic);
+         javaFXSyncedTopicListeners.put(topic, topicListeners);
+         topicListeners.addListener(listener);
+      }
+      else // The following one can throw an exception if the JavaFX thread has not started yet.
+      {
+         try
+         { // Postpone the entire registration in case JavaFXSyncedTopicListeners has been created by another caller.
+            runFXLater(() -> registerJavaFXSyncedTopicListener(topic, listener));
+            return;
+         }
+         catch (IllegalStateException e)
+         { // The JavaFX thread has not started yet, no need to invoke Platform.runLater(...).
+            topicListeners = new JavaFXSyncedTopicListeners(topic);
+            javaFXSyncedTopicListeners.put(topic, topicListeners);
+            topicListeners.addListener(listener);
+         }
+      }
+   }
+
+   protected void runFXLater(Runnable fxTask)
+   {
+      Platform.runLater(fxTask);
+   }
+
+   protected void runFXAndWait(final Runnable fxTask)
+   {
+      if (Platform.isFxApplicationThread())
+      {
+         tryRun(fxTask);
+      }
+      else
+      {
+         final CountDownLatch doneLatch = new CountDownLatch(1);
+
+         runFXLater(() ->
+         {
+            tryRun(fxTask);
+            doneLatch.countDown();
+         });
+
+         try
+         {
+            doneLatch.await();
+         }
+         catch (InterruptedException ex)
+         {
+            ex.printStackTrace();
+         }
+      }
+   }
+
+   protected void tryRun(Runnable fxTask)
+   {
+      try
+      {
+         fxTask.run();
+      }
+      catch (Throwable t)
+      {
+         System.err.println("Exception in fxTask");
+         t.printStackTrace();
+      }
    }
 
    /** {@inheritDoc} */
@@ -110,7 +155,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
          try
          { // The following one can throw an exception if the JavaFX thread has not started yet.
             MutableBoolean result = new MutableBoolean();
-            PlatformImpl.runAndWait(() -> result.setValue(topicListeners.removeListener(listener)));
+            runFXAndWait(() -> result.setValue(topicListeners.removeListener(listener)));
             return result.booleanValue();
          }
          catch (IllegalStateException e)
@@ -132,6 +177,8 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @Override
    public void closeMessager()
    {
+      javaFXSyncedTopicListeners.values().forEach(JavaFXSyncedTopicListeners::dispose);
+      javaFXSyncedTopicListeners.clear();
       super.closeMessager();
       animationTimer.stop();
    }
@@ -139,8 +186,9 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @SuppressWarnings("unchecked")
    private class JavaFXSyncedTopicListeners
    {
+      private static final Object NULL_OBJECT = new Object();
       private final ConcurrentLinkedQueue<Object> inputQueue = new ConcurrentLinkedQueue<>();
-      private final List<TopicListener<Object>> listeners = new ArrayList<>();
+      private final ConcurrentLinkedQueue<TopicListener<Object>> listeners = new ConcurrentLinkedQueue<>();
 
       private JavaFXSyncedTopicListeners(Topic<?> topic)
       {
@@ -148,6 +196,8 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
          {
             if (message != null)
                inputQueue.add(message);
+            else
+               inputQueue.add(NULL_OBJECT);
          });
       }
 
@@ -166,13 +216,22 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
          while (!inputQueue.isEmpty())
          {
             Object newData = inputQueue.poll();
-            listeners.forEach(listener -> listener.receivedMessageForTopic(newData));
+            if (newData == NULL_OBJECT)
+               listeners.forEach(listener -> listener.receivedMessageForTopic(null));
+            else
+               listeners.forEach(listener -> listener.receivedMessageForTopic(newData));
          }
       }
 
       public boolean isEmpty()
       {
          return listeners.isEmpty();
+      }
+
+      public void dispose()
+      {
+         inputQueue.clear();
+         listeners.clear();
       }
    }
 }

@@ -30,18 +30,6 @@ public final class Message<T>
     * </p>
     */
    public T messageContent;
-   /**
-    * For asynchronous implementations of the messager, this field provides a hint that the caller
-    * wants the processing of the message to be synchronous.
-    * <p>
-    * When {@code true}, the caller expects that {@link Messager#submitMessage(Message)} is to return
-    * only after the message has been processed by the active listeners.
-    * </p>
-    * <p>
-    * Please verify with the messager implementation whether this option is supported.
-    * </p>
-    */
-   public boolean synchronousHint = false;
 
    /** Empty constructor only used for serialization purposes. */
    public Message()
@@ -73,24 +61,6 @@ public final class Message<T>
    }
 
    /**
-    * Creates a new message which specifies that it processing should be synchronous.
-    * <p>
-    * The caller expects that {@link Messager#submitMessage(Message)} is to return only after the
-    * message has been processed by the active listeners.
-    * </p>
-    * 
-    * @param topic          the topic the data is for.
-    * @param messageContent the data to carry.
-    * @return the new message
-    */
-   public static <T> Message<T> newSynchronizedMessage(TopicID topicID, T messageContent)
-   {
-      Message<T> message = new Message<>(topicID, messageContent);
-      message.synchronousHint = true;
-      return message;
-   }
-
-   /**
     * Copy constructor.
     * 
     * @param other the other message to copy.
@@ -109,7 +79,6 @@ public final class Message<T>
    {
       topicID = other.topicID;
       messageContent = other.messageContent;
-      synchronousHint = other.synchronousHint;
    }
 
    /**
@@ -143,25 +112,6 @@ public final class Message<T>
       return messageContent;
    }
 
-   /**
-    * For asynchronous implementations of the messager, this field provides a hint that the caller
-    * wants the processing of the message to be synchronous.
-    * <p>
-    * When {@code true}, the caller expects that {@link Messager#submitMessage(Message)} is to return
-    * only after the message has been processed by the active listeners.
-    * </p>
-    * <p>
-    * Please verify with the messager implementation whether this option is supported.
-    * </p>
-    * 
-    * @return {@code true} if synchronous message processing is desired, {@code false} if there are no
-    *         expectations on how the message is to be processed.
-    */
-   public boolean isSynchronousHint()
-   {
-      return synchronousHint;
-   }
-
    @SuppressWarnings("rawtypes")
    @Override
    public boolean equals(Object object)
@@ -169,7 +119,7 @@ public final class Message<T>
       if (object == this)
          return true;
       else if (object instanceof Message other)
-         return Objects.equals(topicID, other.topicID) && Objects.equals(messageContent, other.messageContent) && synchronousHint == other.synchronousHint;
+         return Objects.equals(topicID, other.topicID) && Objects.equals(messageContent, other.messageContent);
       else
          return false;
    }
