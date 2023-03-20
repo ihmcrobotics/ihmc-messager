@@ -20,7 +20,7 @@ import us.ihmc.messager.Messager;
 import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.MessagerStateListener;
-import us.ihmc.messager.TopicListener;
+import us.ihmc.messager.TopicListenerBase;
 
 /**
  * A {@link Messager} implementation that uses Kryonet under the hood. With Kryo there must be a
@@ -38,7 +38,7 @@ public class KryoMessager implements Messager
    private MessagerUpdateThread messagerUpdateThread;
 
    private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> inputVariablesMap = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<Topic<?>, List<TopicListenerBase<Object>>> topicListenersMap = new ConcurrentHashMap<>();
    private final Map<MessagerStateListener, Consumer<Boolean>> connectionStateListeners = new HashMap<>();
 
    private boolean allowSelfSubmit = true;
@@ -139,7 +139,7 @@ public class KryoMessager implements Messager
       kryoAdapter.sendTCP(message);
    }
 
-   @SuppressWarnings("rawtypes")
+   @SuppressWarnings({"rawtypes", "unchecked"})
    private void receiveMessage(Object object)
    {
       if (!(object instanceof Message))
@@ -158,9 +158,9 @@ public class KryoMessager implements Messager
       if (inputVariablesForTopic != null)
          inputVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
 
-      List<TopicListener<Object>> topicListeners = topicListenersMap.get(messageTopic);
+      List<TopicListenerBase<Object>> topicListeners = topicListenersMap.get(messageTopic);
       if (topicListeners != null)
-         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
+         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message));
    }
 
    /** {@inheritDoc} */
@@ -195,17 +195,17 @@ public class KryoMessager implements Messager
    /** {@inheritDoc} */
    @SuppressWarnings("unchecked")
    @Override
-   public <T> void addTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener)
    {
-      List<TopicListener<Object>> topicListeners = topicListenersMap.computeIfAbsent(topic, k -> new ArrayList<>());
-      topicListeners.add((TopicListener<Object>) listener);
+      List<TopicListenerBase<Object>> topicListeners = topicListenersMap.computeIfAbsent(topic, k -> new ArrayList<>());
+      topicListeners.add((TopicListenerBase<Object>) listener);
    }
 
    /** {@inheritDoc} */
    @Override
-   public <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> boolean removeTopicListener(Topic<T> topic, TopicListenerBase<T> listener)
    {
-      List<TopicListener<Object>> topicListeners = topicListenersMap.get(topic);
+      List<TopicListenerBase<Object>> topicListeners = topicListenersMap.get(topic);
       if (topicListeners == null)
          return false;
       else
@@ -213,9 +213,7 @@ public class KryoMessager implements Messager
    }
 
    /**
-    * Starts the messager, blocking until it's started.
-    *
-    * {@inheritDoc}
+    * Starts the messager, blocking until it's started. {@inheritDoc}
     */
    @Override
    public void startMessager() throws Exception
@@ -242,7 +240,8 @@ public class KryoMessager implements Messager
    }
 
    /**
-    * Starts the messager asyncronously. This may cause initial bugs if your application does not wait for startup.
+    * Starts the messager asyncronously. This may cause initial bugs if your application does not wait
+    * for startup.
     */
    public void startMessagerAsyncronously()
    {

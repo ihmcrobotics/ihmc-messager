@@ -31,6 +31,12 @@ public final class Message<T>
     */
    public T messageContent;
 
+   /**
+    * Hint for how the execution should be performed: {@link SynchronizeHint#NONE} nothing is expected,
+    * {@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as possible and the
+    * actual execution should be performed asynchronously, {@link SynchronizeHint#SYNCHRONOUS} the
+    * listener should return only once the execution is done.
+    */
    public SynchronizeHint synchronizeHint;
 
    /** Empty constructor only used for serialization purposes. */

@@ -111,10 +111,7 @@ public interface Messager
     * @param listener the listener to be registered. It will be notified of new messages as well as a
     *                 hint on how to execute.
     */
-   default <T> void addTopicListenerSyncable(MessagerAPIFactory.Topic<T> topic, TopicListenerSyncable<T> listener)
-   {
-      addTopicListener(topic, (TopicListener<T>) listener);
-   }
+   <T> void addTopicListenerBase(MessagerAPIFactory.Topic<T> topic, TopicListenerBase<T> listener);
 
    /**
     * Registers a listener to be notified when new data is received for the given topic.
@@ -122,7 +119,10 @@ public interface Messager
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
-   <T> void addTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListener<T> listener);
+   default <T> void addTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListener<T> listener)
+   {
+      addTopicListenerBase(topic, (TopicListenerBase<T>) listener);
+   }
 
    /**
     * Removes a listener that was previously registered to this messager.
@@ -132,7 +132,7 @@ public interface Messager
     * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
     *         otherwise.
     */
-   <T> boolean removeTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListener<T> listener);
+   <T> boolean removeTopicListener(MessagerAPIFactory.Topic<T> topic, TopicListenerBase<T> listener);
 
    /**
     * Opens this messager to start sending and receiving messages.

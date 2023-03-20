@@ -7,8 +7,14 @@ package us.ihmc.messager;
  * @author Sylvain Bertrand
  * @param <T> the data type.
  */
-public interface TopicListener<T>
+public interface TopicListener<T> extends TopicListenerBase<T>
 {
+   @Override
+   default void receivedMessageForTopic(Message<T> message)
+   {
+      receivedMessageForTopic(message.getMessageContent());
+   }
+
    /**
     * The messager just received data for the topic.
     * 

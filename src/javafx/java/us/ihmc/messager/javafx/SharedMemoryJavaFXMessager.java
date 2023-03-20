@@ -13,9 +13,8 @@ import us.ihmc.messager.Message;
 import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.SharedMemoryMessager;
-import us.ihmc.messager.TopicListenerSyncable;
 import us.ihmc.messager.SynchronizeHint;
-import us.ihmc.messager.TopicListener;
+import us.ihmc.messager.TopicListenerBase;
 
 /**
  * Implementation of {@code JavaFXMessager} using shared memory.
@@ -86,25 +85,19 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void submitMessage(Message<T> message)
    {
       super.submitMessage(message);
       JavaFXTopicListeners topicListeners = fxTopicListeners.get(message.getTopic(messagerAPI));
       if (topicListeners != null)
-         topicListeners.submitMessage(message);
+         topicListeners.submitMessage((Message<Object>) message);
    }
 
    /** {@inheritDoc} */
    @Override
-   public <T> void addFXTopicListenerSyncable(Topic<T> topic, TopicListenerSyncable<T> listener)
-   {
-      addFXTopicListener(topic, (TopicListener<T>) listener);
-   }
-
-   /** {@inheritDoc} */
-   @Override
-   public <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addFXTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener)
    {
       JavaFXTopicListeners topicListeners = fxTopicListeners.get(topic);
 
@@ -124,7 +117,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
       {
          try
          { // Postpone the entire registration in case JavaFXSyncedTopicListeners has been created by another caller.
-            runFXLater(() -> addFXTopicListener(topic, listener));
+            runFXLater(() -> addFXTopicListenerBase(topic, listener));
             return;
          }
          catch (IllegalStateException e)
@@ -183,7 +176,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
 
    /** {@inheritDoc} */
    @Override
-   public <T> boolean removeFXTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> boolean removeFXTopicListener(Topic<T> topic, TopicListenerBase<T> listener)
    {
       JavaFXTopicListeners topicListeners = fxTopicListeners.get(topic);
       if (topicListeners == null)
@@ -231,41 +224,27 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @SuppressWarnings("unchecked")
    protected class JavaFXTopicListeners
    {
-      protected final ConcurrentLinkedQueue<Message<?>> messageQueue = new ConcurrentLinkedQueue<>();
-      protected final ConcurrentLinkedQueue<TopicListener<Object>> listeners = new ConcurrentLinkedQueue<>();
+      protected final ConcurrentLinkedQueue<Message<Object>> messageQueue = new ConcurrentLinkedQueue<>();
+      protected final ConcurrentLinkedQueue<TopicListenerBase<Object>> listeners = new ConcurrentLinkedQueue<>();
 
       protected JavaFXTopicListeners(Topic<?> topic)
       {
       }
 
-      protected void submitMessage(Message<?> message)
+      protected void submitMessage(Message<Object> message)
       {
          if (message.getSynchronizeHint() == SynchronizeHint.SYNCHRONOUS)
-         {
-            runFXAndWait(() ->
-            {
-               Object newData = message.getMessageContent();
-               listeners.forEach(listener ->
-               {
-                  if (listener instanceof TopicListenerSyncable<Object> fxListener)
-                     fxListener.receivedMessageForTopic(newData, SynchronizeHint.SYNCHRONOUS);
-                  else
-                     listener.receivedMessageForTopic(newData);
-               });
-            });
-         }
+            runFXAndWait(() -> listeners.forEach(listener -> listener.receivedMessageForTopic(message)));
          else
-         {
             messageQueue.add(message);
-         }
       }
 
-      protected void addListener(TopicListener<?> listener)
+      protected void addListener(TopicListenerBase<?> listener)
       {
-         listeners.add((TopicListener<Object>) listener);
+         listeners.add((TopicListenerBase<Object>) listener);
       }
 
-      protected boolean removeListener(TopicListener<?> listener)
+      protected boolean removeListener(TopicListenerBase<?> listener)
       {
          return listeners.remove(listener);
       }
@@ -274,17 +253,8 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
       {
          while (!messageQueue.isEmpty())
          {
-            Message<?> newMessage = messageQueue.poll();
-            Object newData = newMessage.getMessageContent();
-            SynchronizeHint newHint = newMessage.getSynchronizeHint() == null ? SynchronizeHint.NONE : (SynchronizeHint) newMessage.getSynchronizeHint();
-
-            listeners.forEach(listener ->
-            {
-               if (listener instanceof TopicListenerSyncable<Object> fxListener)
-                  fxListener.receivedMessageForTopic(newData, newHint);
-               else
-                  listener.receivedMessageForTopic(newData);
-            });
+            Message<Object> newMessage = messageQueue.poll();
+            listeners.forEach(listener -> listener.receivedMessageForTopic(newMessage));
          }
       }
 

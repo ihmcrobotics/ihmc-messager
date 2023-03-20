@@ -2,7 +2,9 @@ package us.ihmc.messager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,6 +36,7 @@ public class SharedMemoryMessager implements Messager
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void submitMessage(Message<T> message)
    {
@@ -51,7 +54,11 @@ public class SharedMemoryMessager implements Messager
       TopicEntry topicEntry = topicEntries.get(messageTopic);
 
       if (topicEntry != null)
-         topicEntry.consumeMessage(message);
+      {
+         if (message.getSynchronizeHint() == null)
+            message.setSynchronizeHint(SynchronizeHint.NONE);
+         topicEntry.consumeMessage((Message<Object>) message);
+      }
    }
 
    /** {@inheritDoc} */
@@ -91,7 +98,7 @@ public class SharedMemoryMessager implements Messager
    /** {@inheritDoc} */
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void addTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener)
    {
       TopicEntry topicEntry = topicEntries.get(topic);
       if (topicEntry == null)
@@ -105,7 +112,7 @@ public class SharedMemoryMessager implements Messager
    /** {@inheritDoc} */
    @SuppressWarnings("unchecked")
    @Override
-   public <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> boolean removeTopicListener(Topic<T> topic, TopicListenerBase<T> listener)
    {
       TopicEntry topicEntry = topicEntries.get(topic);
       if (topicEntry == null)
@@ -127,6 +134,9 @@ public class SharedMemoryMessager implements Messager
    {
       isConnected.set(false);
       notifyMessagerStateListeners();
+      topicEntries.values().forEach(TopicEntry::clear);
+      topicEntries.clear();
+      connectionStateListeners.clear();
    }
 
    /** {@inheritDoc} */
@@ -164,11 +174,19 @@ public class SharedMemoryMessager implements Messager
       return messagerAPI;
    }
 
+   /**
+    * Convenience class for gathering the different variables associated with a single topic.
+    */
    protected static class TopicEntry
    {
-      private final List<AtomicReference<Object>> boundVariables = new ArrayList<>();
-      private final List<TopicListener<Object>> topicListeners = new ArrayList<>();
-      private final List<TopicListenerSyncable<Object>> syncableTopicListeners = new ArrayList<>();
+      private final Queue<AtomicReference<Object>> boundVariables = new ConcurrentLinkedQueue<>();
+      private final Queue<TopicListenerBase<Object>> topicListeners = new ConcurrentLinkedQueue<>();
+
+      protected void clear()
+      {
+         boundVariables.clear();
+         topicListeners.clear();
+      }
 
       protected void bindVariable(AtomicReference<Object> variable)
       {
@@ -180,35 +198,24 @@ public class SharedMemoryMessager implements Messager
          return boundVariables.remove(variable);
       }
 
-      protected void addListener(TopicListener<Object> listener)
+      protected void addListener(TopicListenerBase<Object> listener)
       {
-         if (listener instanceof TopicListenerSyncable<Object> syncListener)
-            syncableTopicListeners.add(syncListener);
-         else
-            topicListeners.add(listener);
+         topicListeners.add(listener);
       }
 
-      protected boolean removeListener(TopicListener<Object> listener)
+      protected boolean removeListener(TopicListenerBase<Object> listener)
       {
-         if (listener instanceof TopicListenerSyncable<Object> syncListener)
-            return syncableTopicListeners.remove(syncListener);
-         else
-            return topicListeners.remove(listener);
+         return topicListeners.remove(listener);
       }
 
-      protected void consumeMessage(Message<?> message)
+      protected void consumeMessage(Message<Object> message)
       {
          Object messageContent = message.getMessageContent();
-         SynchronizeHint synchronizeHint = message.getSynchronizeHint();
-         if (synchronizeHint == null)
-            synchronizeHint = SynchronizeHint.NONE;
 
-         for (int i = 0; i < boundVariables.size(); i++)
-            boundVariables.get(i).set(messageContent);
-         for (int i = 0; i < topicListeners.size(); i++)
-            topicListeners.get(i).receivedMessageForTopic(messageContent);
-         for (int i = 0; i < syncableTopicListeners.size(); i++)
-            syncableTopicListeners.get(i).receivedMessageForTopic(messageContent, synchronizeHint);
+         for (AtomicReference<Object> boundVariable : boundVariables)
+            boundVariable.set(messageContent);
+         for (TopicListenerBase<Object> listener : topicListeners)
+            listener.receivedMessageForTopic(message);
       }
    }
 }

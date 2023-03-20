@@ -6,7 +6,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import us.ihmc.messager.Messager;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
-import us.ihmc.messager.TopicListenerSyncable;
+import us.ihmc.messager.TopicListenerBase;
 import us.ihmc.messager.TopicListener;
 import us.ihmc.messager.javafx.MessageBidirectionalBinding.PropertyToMessageTypeConverter;
 
@@ -126,7 +126,10 @@ public interface JavaFXMessager extends Messager
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
-   <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener);
+   default <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener)
+   {
+      addFXTopicListenerBase(topic, listener);
+   }
 
    /**
     * Same as {@link #addTopicListener(Topic, TopicListener)} but the listener only get notified on the
@@ -138,7 +141,7 @@ public interface JavaFXMessager extends Messager
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
     */
-   <T> void addFXTopicListenerSyncable(Topic<T> topic, TopicListenerSyncable<T> listener);
+   <T> void addFXTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener);
 
    /**
     * Removes a listener that was previously registered to this messager via
@@ -149,5 +152,5 @@ public interface JavaFXMessager extends Messager
     * @return {@code true} if the internal list of inputs was modified by this operation, {@code false}
     *         otherwise.
     */
-   <T> boolean removeFXTopicListener(Topic<T> topic, TopicListener<T> listener);
+   <T> boolean removeFXTopicListener(Topic<T> topic, TopicListenerBase<T> listener);
 }
