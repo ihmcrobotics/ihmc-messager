@@ -122,6 +122,10 @@ public interface JavaFXMessager extends Messager
     * <p>
     * This implementation is to be used whenever the listener is to update some UI controls or scene.
     * </p>
+    * <p>
+    * The {@code TopicListener} interface is a little more user friendly by first unpacking the message
+    * content. Note that by doing so, it hides other potential fields associated to the message itself.
+    * </p>
     *
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.
@@ -132,8 +136,8 @@ public interface JavaFXMessager extends Messager
    }
 
    /**
-    * Same as {@link #addTopicListener(Topic, TopicListener)} but the listener only get notified on the
-    * next rendering thread tick.
+    * Same as {@link #addTopicListenerBase(Topic, TopicListenerBase)} but the listener only get
+    * notified on the next rendering thread tick.
     * <p>
     * This implementation is to be used whenever the listener is to update some UI controls or scene.
     * </p>
@@ -144,8 +148,7 @@ public interface JavaFXMessager extends Messager
    <T> void addFXTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener);
 
    /**
-    * Removes a listener that was previously registered to this messager via
-    * {@link #addFXTopicListener(Topic, TopicListener)}.
+    * Removes a listener that was previously registered to this messager.
     *
     * @param topic    the topic the listener is listening to.
     * @param listener the listener to be removed.

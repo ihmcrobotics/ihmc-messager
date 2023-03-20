@@ -115,6 +115,10 @@ public interface Messager
 
    /**
     * Registers a listener to be notified when new data is received for the given topic.
+    * <p>
+    * The {@code TopicListener} interface is a little more user friendly by first unpacking the message
+    * content. Note that by doing so, it hides other potential fields associated to the message itself.
+    * </p>
     *
     * @param topic    the topic to listen to.
     * @param listener the listener to be registered.

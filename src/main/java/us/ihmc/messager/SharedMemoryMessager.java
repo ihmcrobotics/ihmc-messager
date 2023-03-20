@@ -106,7 +106,7 @@ public class SharedMemoryMessager implements Messager
          topicEntry = new TopicEntry();
          topicEntries.put(topic, topicEntry);
       }
-      topicEntry.addListener((TopicListener<Object>) listener);
+      topicEntry.addListener((TopicListenerBase<Object>) listener);
    }
 
    /** {@inheritDoc} */
@@ -117,7 +117,7 @@ public class SharedMemoryMessager implements Messager
       TopicEntry topicEntry = topicEntries.get(topic);
       if (topicEntry == null)
          return false;
-      return topicEntry.removeListener((TopicListener<Object>) listener);
+      return topicEntry.removeListener((TopicListenerBase<Object>) listener);
    }
 
    /** {@inheritDoc} */

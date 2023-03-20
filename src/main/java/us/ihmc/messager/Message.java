@@ -32,10 +32,14 @@ public final class Message<T>
    public T messageContent;
 
    /**
-    * Hint for how the execution should be performed: {@link SynchronizeHint#NONE} nothing is expected,
-    * {@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as possible and the
-    * actual execution should be performed asynchronously, {@link SynchronizeHint#SYNCHRONOUS} the
-    * listener should return only once the execution is done.
+    * Hint for how the execution inside the listener should be performed:
+    * <ul>
+    * <li>{@link SynchronizeHint#NONE} nothing is expected,
+    * <li>{@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as possible and the
+    * actual execution should be performed asynchronously,
+    * <li>{@link SynchronizeHint#SYNCHRONOUS} the listener should return only once the execution is
+    * done.
+    * </ul>
     */
    public SynchronizeHint synchronizeHint;
 
@@ -121,11 +125,35 @@ public final class Message<T>
       return messageContent;
    }
 
+   /**
+    * Sets the hint for how the execution inside the listener should be performed:
+    * <ul>
+    * <li>{@link SynchronizeHint#NONE} nothing is expected,
+    * <li>{@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as possible and the
+    * actual execution should be performed asynchronously,
+    * <li>{@link SynchronizeHint#SYNCHRONOUS} the listener should return only once the execution is
+    * done.
+    * </ul>
+    * 
+    * @param synchronizeHint the new hint value.
+    */
    public void setSynchronizeHint(SynchronizeHint synchronizeHint)
    {
       this.synchronizeHint = synchronizeHint;
    }
 
+   /**
+    * Returns the hint for how the execution inside the listener should be performed:
+    * <ul>
+    * <li>{@link SynchronizeHint#NONE} nothing is expected,
+    * <li>{@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as possible and the
+    * actual execution should be performed asynchronously,
+    * <li>{@link SynchronizeHint#SYNCHRONOUS} the listener should return only once the execution is
+    * done.
+    * </ul>
+    * 
+    * @return the hint value.
+    */
    public SynchronizeHint getSynchronizeHint()
    {
       return synchronizeHint;

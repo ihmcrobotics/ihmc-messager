@@ -213,7 +213,8 @@ public class KryoMessager implements Messager
    }
 
    /**
-    * Starts the messager, blocking until it's started. {@inheritDoc}
+    * Starts the messager, blocking until it's started.<br>
+    * {@inheritDoc}
     */
    @Override
    public void startMessager() throws Exception
