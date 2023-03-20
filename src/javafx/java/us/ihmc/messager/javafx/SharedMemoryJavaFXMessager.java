@@ -13,6 +13,8 @@ import us.ihmc.messager.Message;
 import us.ihmc.messager.MessagerAPIFactory.MessagerAPI;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.SharedMemoryMessager;
+import us.ihmc.messager.TopicListenerSyncable;
+import us.ihmc.messager.SynchronizeHint;
 import us.ihmc.messager.TopicListener;
 
 /**
@@ -22,7 +24,7 @@ import us.ihmc.messager.TopicListener;
  */
 public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements JavaFXMessager
 {
-   private final Map<Topic<?>, BufferedTopicListeners> bufferedTopicListeners = new HashMap<>();
+   private final Map<Topic<?>, JavaFXTopicListeners> fxTopicListeners = new HashMap<>();
    private final AnimationTimer animationTimer;
    private boolean readingListeners = false;
 
@@ -68,9 +70,9 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
       {
          readingListeners = true;
 
-         bufferedTopicListeners.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+         fxTopicListeners.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 
-         for (BufferedTopicListeners listener : bufferedTopicListeners.values())
+         for (JavaFXTopicListeners listener : fxTopicListeners.values())
             listener.notifyListeners();
       }
       catch (Exception e)
@@ -88,13 +90,14 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    public <T> void submitMessage(Message<T> message)
    {
       super.submitMessage(message);
-      BufferedTopicListeners topicListeners = bufferedTopicListeners.get(message.getTopic(messagerAPI));
-      topicListeners.submitMessage(message);
+      JavaFXTopicListeners topicListeners = fxTopicListeners.get(message.getTopic(messagerAPI));
+      if (topicListeners != null)
+         topicListeners.submitMessage(message);
    }
 
    /** {@inheritDoc} */
    @Override
-   public <T> void addFXTopicListener(Topic<T> topic, FXTopicListener<T> listener)
+   public <T> void addFXTopicListenerSyncable(Topic<T> topic, TopicListenerSyncable<T> listener)
    {
       addFXTopicListener(topic, (TopicListener<T>) listener);
    }
@@ -103,7 +106,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @Override
    public <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
-      BufferedTopicListeners topicListeners = bufferedTopicListeners.get(topic);
+      JavaFXTopicListeners topicListeners = fxTopicListeners.get(topic);
 
       if (topicListeners != null)
       {
@@ -113,8 +116,8 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
 
       if (!readingListeners && Platform.isFxApplicationThread())
       { // It appears to not be enough to check for application thread somehow.
-         topicListeners = new BufferedTopicListeners(topic);
-         bufferedTopicListeners.put(topic, topicListeners);
+         topicListeners = new JavaFXTopicListeners(topic);
+         fxTopicListeners.put(topic, topicListeners);
          topicListeners.addListener(listener);
       }
       else // The following one can throw an exception if the JavaFX thread has not started yet.
@@ -126,8 +129,8 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
          }
          catch (IllegalStateException e)
          { // The JavaFX thread has not started yet, no need to invoke Platform.runLater(...).
-            topicListeners = new BufferedTopicListeners(topic);
-            bufferedTopicListeners.put(topic, topicListeners);
+            topicListeners = new JavaFXTopicListeners(topic);
+            fxTopicListeners.put(topic, topicListeners);
             topicListeners.addListener(listener);
          }
       }
@@ -182,7 +185,7 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @Override
    public <T> boolean removeFXTopicListener(Topic<T> topic, TopicListener<T> listener)
    {
-      BufferedTopicListeners topicListeners = bufferedTopicListeners.get(topic);
+      JavaFXTopicListeners topicListeners = fxTopicListeners.get(topic);
       if (topicListeners == null)
          return false;
 
@@ -218,35 +221,34 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
    @Override
    public void closeMessager()
    {
-      bufferedTopicListeners.values().forEach(BufferedTopicListeners::dispose);
-      bufferedTopicListeners.clear();
+      fxTopicListeners.values().forEach(JavaFXTopicListeners::dispose);
+      fxTopicListeners.clear();
       super.closeMessager();
       if (animationTimer != null)
          animationTimer.stop();
    }
 
    @SuppressWarnings("unchecked")
-   protected class BufferedTopicListeners
+   protected class JavaFXTopicListeners
    {
-      protected static final Object NULL_OBJECT = new Object();
       protected final ConcurrentLinkedQueue<Message<?>> messageQueue = new ConcurrentLinkedQueue<>();
       protected final ConcurrentLinkedQueue<TopicListener<Object>> listeners = new ConcurrentLinkedQueue<>();
 
-      protected BufferedTopicListeners(Topic<?> topic)
+      protected JavaFXTopicListeners(Topic<?> topic)
       {
       }
 
       protected void submitMessage(Message<?> message)
       {
-         if (message.getAuxiliaryData() == SynchronizeHint.SYNCHRONOUS)
+         if (message.getSynchronizeHint() == SynchronizeHint.SYNCHRONOUS)
          {
             runFXAndWait(() ->
             {
-               Object newData = message.getMessageContent() == NULL_OBJECT ? null : message.getMessageContent();
+               Object newData = message.getMessageContent();
                listeners.forEach(listener ->
                {
-                  if (listener instanceof FXTopicListener<Object> fxListener)
-                     fxListener.receivedMessageForFXTopic(newData, SynchronizeHint.SYNCHRONOUS);
+                  if (listener instanceof TopicListenerSyncable<Object> fxListener)
+                     fxListener.receivedMessageForTopic(newData, SynchronizeHint.SYNCHRONOUS);
                   else
                      listener.receivedMessageForTopic(newData);
                });
@@ -273,13 +275,13 @@ public class SharedMemoryJavaFXMessager extends SharedMemoryMessager implements 
          while (!messageQueue.isEmpty())
          {
             Message<?> newMessage = messageQueue.poll();
-            Object newData = newMessage.getMessageContent() == NULL_OBJECT ? null : newMessage.getMessageContent();
-            SynchronizeHint newHint = newMessage.getAuxiliaryData() == null ? SynchronizeHint.NONE : (SynchronizeHint) newMessage.getAuxiliaryData();
+            Object newData = newMessage.getMessageContent();
+            SynchronizeHint newHint = newMessage.getSynchronizeHint() == null ? SynchronizeHint.NONE : (SynchronizeHint) newMessage.getSynchronizeHint();
 
             listeners.forEach(listener ->
             {
-               if (listener instanceof FXTopicListener<Object> fxListener)
-                  fxListener.receivedMessageForFXTopic(newData, newHint);
+               if (listener instanceof TopicListenerSyncable<Object> fxListener)
+                  fxListener.receivedMessageForTopic(newData, newHint);
                else
                   listener.receivedMessageForTopic(newData);
             });

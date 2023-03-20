@@ -31,7 +31,7 @@ public final class Message<T>
     */
    public T messageContent;
 
-   public Object auxiliaryData;
+   public SynchronizeHint synchronizeHint;
 
    /** Empty constructor only used for serialization purposes. */
    public Message()
@@ -81,7 +81,7 @@ public final class Message<T>
    {
       topicID = other.topicID;
       messageContent = other.messageContent;
-      auxiliaryData = other.auxiliaryData;
+      synchronizeHint = other.synchronizeHint;
    }
 
    /**
@@ -115,14 +115,14 @@ public final class Message<T>
       return messageContent;
    }
 
-   public void setAuxiliaryData(Object auxiliaryData)
+   public void setSynchronizeHint(SynchronizeHint synchronizeHint)
    {
-      this.auxiliaryData = auxiliaryData;
+      this.synchronizeHint = synchronizeHint;
    }
 
-   public Object getAuxiliaryData()
+   public SynchronizeHint getSynchronizeHint()
    {
-      return auxiliaryData;
+      return synchronizeHint;
    }
 
    @SuppressWarnings("rawtypes")
@@ -139,7 +139,7 @@ public final class Message<T>
             return false;
          if (!Objects.equals(messageContent, other.messageContent))
             return false;
-         if (!Objects.equals(auxiliaryData, other.auxiliaryData))
+         if (!Objects.equals(synchronizeHint, other.synchronizeHint))
             return false;
          return true;
       }

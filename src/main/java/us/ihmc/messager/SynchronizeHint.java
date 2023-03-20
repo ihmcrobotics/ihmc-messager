@@ -1,4 +1,4 @@
-package us.ihmc.messager.javafx;
+package us.ihmc.messager;
 
 public enum SynchronizeHint
 {

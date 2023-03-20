@@ -33,7 +33,27 @@ public interface Messager
     */
    default <T> void submitMessage(MessagerAPIFactory.Topic<T> topic, T messageContent)
    {
-      submitMessage(new Message<>(topic, messageContent));
+      submitMessage(topic, messageContent, SynchronizeHint.NONE);
+   }
+
+   /**
+    * Sends data for a given topic alongside a flag to indicate the preferred wait of synchronizing the
+    * execution.
+    *
+    * @param topic          the topic of the data.
+    * @param messageContent the data.
+    * @param hint           hint for how the execution should be performed:
+    *                       {@link SynchronizeHint#NONE} nothing is expected,
+    *                       {@link SynchronizeHint#ASYNCHRONOUS} the listener should return as soon as
+    *                       possible and the actual execution should be performed asynchronously,
+    *                       {@link SynchronizeHint#SYNCHRONOUS} the listener should return only once
+    *                       the execution is done.
+    */
+   default <T> void submitMessage(MessagerAPIFactory.Topic<T> topic, T messageContent, SynchronizeHint hint)
+   {
+      Message<T> message = new Message<>(topic, messageContent);
+      message.setSynchronizeHint(hint);
+      submitMessage(message);
    }
 
    /**
@@ -83,6 +103,18 @@ public interface Messager
     *         otherwise.
     */
    <T> boolean removeInput(MessagerAPIFactory.Topic<T> topic, AtomicReference<T> input);
+
+   /**
+    * Registers a listener to be notified when new data is received for the given topic.
+    * 
+    * @param topic    the topic to listen to.
+    * @param listener the listener to be registered. It will be notified of new messages as well as a
+    *                 hint on how to execute.
+    */
+   default <T> void addTopicListenerSyncable(MessagerAPIFactory.Topic<T> topic, TopicListenerSyncable<T> listener)
+   {
+      addTopicListener(topic, (TopicListener<T>) listener);
+   }
 
    /**
     * Registers a listener to be notified when new data is received for the given topic.
