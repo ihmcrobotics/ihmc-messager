@@ -4,6 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import us.ihmc.messager.Message;
 import us.ihmc.messager.Messager;
 import us.ihmc.messager.MessagerAPIFactory.Topic;
 import us.ihmc.messager.TopicListener;
@@ -16,6 +17,13 @@ import us.ihmc.messager.javafx.MessageBidirectionalBinding.PropertyToMessageType
  */
 public interface JavaFXMessager extends Messager
 {
+   default <T> void sumbitFXMessage(Topic<T> topic, T messageContent, boolean wait)
+   {
+      Message<T> message = new Message<>(topic, messageContent);
+      message.setAuxiliaryData(SynchronizeHint.SYNCHRONOUS);
+      submitMessage(message);
+   }
+
    /**
     * Creates a property which is to be automatically updated when this messager receives data destined
     * to the given topic.
@@ -126,6 +134,18 @@ public interface JavaFXMessager extends Messager
     * @param listener the listener to be registered.
     */
    <T> void addFXTopicListener(Topic<T> topic, TopicListener<T> listener);
+
+   /**
+    * Same as {@link #addTopicListener(Topic, TopicListener)} but the listener only get notified on the
+    * next rendering thread tick.
+    * <p>
+    * This implementation is to be used whenever the listener is to update some UI controls or scene.
+    * </p>
+    *
+    * @param topic    the topic to listen to.
+    * @param listener the listener to be registered.
+    */
+   <T> void addFXTopicListener(Topic<T> topic, FXTopicListener<T> listener);
 
    /**
     * Removes a listener that was previously registered to this messager via

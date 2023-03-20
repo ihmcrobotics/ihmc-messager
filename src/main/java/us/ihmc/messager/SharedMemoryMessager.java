@@ -17,12 +17,12 @@ import us.ihmc.messager.MessagerAPIFactory.Topic;
  */
 public class SharedMemoryMessager implements Messager
 {
-   private final MessagerAPI messagerAPI;
+   protected final MessagerAPI messagerAPI;
 
-   private final AtomicBoolean isConnected = new AtomicBoolean(false);
-   private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
-   private final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
+   protected final AtomicBoolean isConnected = new AtomicBoolean(false);
+   protected final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
+   protected final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
+   protected final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
 
    /**
     * Creates a new messager.

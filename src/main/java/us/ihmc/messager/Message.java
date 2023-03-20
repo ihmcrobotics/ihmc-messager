@@ -31,6 +31,8 @@ public final class Message<T>
     */
    public T messageContent;
 
+   public Object auxiliaryData;
+
    /** Empty constructor only used for serialization purposes. */
    public Message()
    {
@@ -79,6 +81,7 @@ public final class Message<T>
    {
       topicID = other.topicID;
       messageContent = other.messageContent;
+      auxiliaryData = other.auxiliaryData;
    }
 
    /**
@@ -112,15 +115,37 @@ public final class Message<T>
       return messageContent;
    }
 
+   public void setAuxiliaryData(Object auxiliaryData)
+   {
+      this.auxiliaryData = auxiliaryData;
+   }
+
+   public Object getAuxiliaryData()
+   {
+      return auxiliaryData;
+   }
+
    @SuppressWarnings("rawtypes")
    @Override
    public boolean equals(Object object)
    {
       if (object == this)
+      {
          return true;
+      }
       else if (object instanceof Message other)
-         return Objects.equals(topicID, other.topicID) && Objects.equals(messageContent, other.messageContent);
+      {
+         if (!Objects.equals(topicID, other.topicID))
+            return false;
+         if (!Objects.equals(messageContent, other.messageContent))
+            return false;
+         if (!Objects.equals(auxiliaryData, other.auxiliaryData))
+            return false;
+         return true;
+      }
       else
+      {
          return false;
+      }
    }
 }
