@@ -6,7 +6,7 @@ plugins {
 
 ihmc {
    group = "us.ihmc"
-   version = "0.1.9"
+   version = "0.2.0"
    vcsUrl = "https://github.com/ihmcrobotics/ihmc-messager"
    openSource = true
 
