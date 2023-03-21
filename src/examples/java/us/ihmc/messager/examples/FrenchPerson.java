@@ -40,7 +40,7 @@ public class FrenchPerson
 
       String[] numbers = {"un", "deux", "trois", "quatre", "cinq"};
 
-      messager.registerTopicListener(ListenFrench, new TopicListener<String>()
+      messager.addTopicListener(ListenFrench, new TopicListener<String>()
       {
          Random random = new Random(2342);
 

@@ -11,8 +11,8 @@ public interface MessagerStateListener
    /**
     * The state of the messager just changed.
     * 
-    * @param isMessagerOpen {@code true} is this messager is now open, i.e. ready to send and
-    *           receive messages, {@code false} if it is now closed.
+    * @param isMessagerOpen {@code true} is this messager is now open, i.e. ready to send and receive
+    *                       messages, {@code false} if it is now closed.
     */
    void messagerStateChanged(boolean isMessagerOpen);
 }

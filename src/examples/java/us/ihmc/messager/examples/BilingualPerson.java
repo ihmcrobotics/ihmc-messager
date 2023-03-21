@@ -29,7 +29,7 @@ public class BilingualPerson
       frenchToEnglishNumbers.put("quatre", "four");
       frenchToEnglishNumbers.put("cinq", "five");
 
-      messager.registerTopicListener(SpeakEnglish, new TopicListener<String>()
+      messager.addTopicListener(SpeakEnglish, new TopicListener<String>()
       {
          @Override
          public void receivedMessageForTopic(String messageContent)
@@ -44,7 +44,7 @@ public class BilingualPerson
          }
       });
 
-      messager.registerTopicListener(SpeakFrench, new TopicListener<String>()
+      messager.addTopicListener(SpeakFrench, new TopicListener<String>()
       {
          @Override
          public void receivedMessageForTopic(String messageContent)

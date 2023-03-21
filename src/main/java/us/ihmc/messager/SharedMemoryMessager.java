@@ -2,7 +2,9 @@ package us.ihmc.messager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,12 +19,11 @@ import us.ihmc.messager.MessagerAPIFactory.Topic;
  */
 public class SharedMemoryMessager implements Messager
 {
-   private final MessagerAPI messagerAPI;
+   protected final MessagerAPI messagerAPI;
 
-   private final AtomicBoolean isConnected = new AtomicBoolean(false);
-   private final ConcurrentHashMap<Topic<?>, List<AtomicReference<Object>>> boundVariables = new ConcurrentHashMap<>();
-   private final ConcurrentHashMap<Topic<?>, List<TopicListener<Object>>> topicListenersMap = new ConcurrentHashMap<>();
-   private final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
+   protected final AtomicBoolean isConnected = new AtomicBoolean(false);
+   protected final ConcurrentHashMap<Topic<?>, TopicEntry> topicEntries = new ConcurrentHashMap<>();
+   protected final List<MessagerStateListener> connectionStateListeners = new ArrayList<>();
 
    /**
     * Creates a new messager.
@@ -35,6 +36,7 @@ public class SharedMemoryMessager implements Messager
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void submitMessage(Message<T> message)
    {
@@ -49,13 +51,14 @@ public class SharedMemoryMessager implements Messager
          return;
       }
 
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.get(messageTopic);
-      if (boundVariablesForTopic != null)
-         boundVariablesForTopic.forEach(variable -> variable.set(message.getMessageContent()));
+      TopicEntry topicEntry = topicEntries.get(messageTopic);
 
-      List<TopicListener<Object>> topicListeners = topicListenersMap.get(messageTopic);
-      if (topicListeners != null)
-         topicListeners.forEach(listener -> listener.receivedMessageForTopic(message.getMessageContent()));
+      if (topicEntry != null)
+      {
+         if (message.getSynchronizeHint() == null)
+            message.setSynchronizeHint(SynchronizeHint.NONE);
+         topicEntry.consumeMessage((Message<Object>) message);
+      }
    }
 
    /** {@inheritDoc} */
@@ -68,47 +71,53 @@ public class SharedMemoryMessager implements Messager
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> void attachInput(Topic<T> topic, AtomicReference<T> input)
    {
-      List<AtomicReference<Object>> boundVariablesForTopic = boundVariables.computeIfAbsent(topic, k -> new ArrayList<>());
-      boundVariablesForTopic.add((AtomicReference<Object>) input);
+      TopicEntry topicEntry = topicEntries.get(topic);
+      if (topicEntry == null)
+      {
+         topicEntry = new TopicEntry();
+         topicEntries.put(topic, topicEntry);
+      }
+      topicEntry.bindVariable((AtomicReference<Object>) input);
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
    public <T> boolean removeInput(Topic<T> topic, AtomicReference<T> input)
    {
-      List<?> boundVariablesForTopic = boundVariables.get(topic);
-      if (boundVariablesForTopic == null)
+      TopicEntry topicEntry = topicEntries.get(topic);
+      if (topicEntry == null)
          return false;
-      else
-         return boundVariablesForTopic.remove(input);
+      return topicEntry.removeVariable((AtomicReference<Object>) input);
    }
 
    /** {@inheritDoc} */
    @Override
    @SuppressWarnings("unchecked")
-   public <T> void registerTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> void addTopicListenerBase(Topic<T> topic, TopicListenerBase<T> listener)
    {
-      List<TopicListener<Object>> topicListeners = topicListenersMap.get(topic);
-      if (topicListeners == null)
+      TopicEntry topicEntry = topicEntries.get(topic);
+      if (topicEntry == null)
       {
-         topicListeners = new ArrayList<>();
-         topicListenersMap.put(topic, topicListeners);
+         topicEntry = new TopicEntry();
+         topicEntries.put(topic, topicEntry);
       }
-      topicListeners.add((TopicListener<Object>) listener);
+      topicEntry.addListener((TopicListenerBase<Object>) listener);
    }
 
    /** {@inheritDoc} */
+   @SuppressWarnings("unchecked")
    @Override
-   public <T> boolean removeTopicListener(Topic<T> topic, TopicListener<T> listener)
+   public <T> boolean removeTopicListener(Topic<T> topic, TopicListenerBase<T> listener)
    {
-      List<?> topicListeners = topicListenersMap.get(topic);
-      if (topicListeners == null)
+      TopicEntry topicEntry = topicEntries.get(topic);
+      if (topicEntry == null)
          return false;
-      else
-         return topicListeners.remove(listener);
+      return topicEntry.removeListener((TopicListenerBase<Object>) listener);
    }
 
    /** {@inheritDoc} */
@@ -125,6 +134,9 @@ public class SharedMemoryMessager implements Messager
    {
       isConnected.set(false);
       notifyMessagerStateListeners();
+      topicEntries.values().forEach(TopicEntry::clear);
+      topicEntries.clear();
+      connectionStateListeners.clear();
    }
 
    /** {@inheritDoc} */
@@ -136,7 +148,7 @@ public class SharedMemoryMessager implements Messager
 
    /** {@inheritDoc} */
    @Override
-   public void registerMessagerStateListener(MessagerStateListener listener)
+   public void addMessagerStateListener(MessagerStateListener listener)
    {
       connectionStateListeners.add(listener);
    }
@@ -160,5 +172,50 @@ public class SharedMemoryMessager implements Messager
    public MessagerAPI getMessagerAPI()
    {
       return messagerAPI;
+   }
+
+   /**
+    * Convenience class for gathering the different variables associated with a single topic.
+    */
+   protected static class TopicEntry
+   {
+      private final Queue<AtomicReference<Object>> boundVariables = new ConcurrentLinkedQueue<>();
+      private final Queue<TopicListenerBase<Object>> topicListeners = new ConcurrentLinkedQueue<>();
+
+      protected void clear()
+      {
+         boundVariables.clear();
+         topicListeners.clear();
+      }
+
+      protected void bindVariable(AtomicReference<Object> variable)
+      {
+         boundVariables.add(variable);
+      }
+
+      protected boolean removeVariable(AtomicReference<Object> variable)
+      {
+         return boundVariables.remove(variable);
+      }
+
+      protected void addListener(TopicListenerBase<Object> listener)
+      {
+         topicListeners.add(listener);
+      }
+
+      protected boolean removeListener(TopicListenerBase<Object> listener)
+      {
+         return topicListeners.remove(listener);
+      }
+
+      protected void consumeMessage(Message<Object> message)
+      {
+         Object messageContent = message.getMessageContent();
+
+         for (AtomicReference<Object> boundVariable : boundVariables)
+            boundVariable.set(messageContent);
+         for (TopicListenerBase<Object> listener : topicListeners)
+            listener.receivedMessageForTopic(message);
+      }
    }
 }

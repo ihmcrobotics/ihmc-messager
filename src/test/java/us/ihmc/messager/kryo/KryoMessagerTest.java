@@ -130,20 +130,20 @@ public class KryoMessagerTest
       AtomicReference<String> englishInput = clientMessager.createInput(ListenEnglish, "I've heard nothing yet.");
       AtomicReference<String> frenchInput = serverMessager.createInput(ListenFrench, "Je n'ai encore rien entendu.");
 
-      clientMessager.registerTopicListener(ListenEnglish, message -> LogTools.info("Client: ListenEnglish: {}", message));
-      clientMessager.registerTopicListener(ListenFrench, message -> LogTools.info("Client: ListenFrench: {}", message));
-      clientMessager.registerTopicListener(SpeakEnglish, message -> LogTools.info("Client: SpeakEnglish: {}", message));
-      clientMessager.registerTopicListener(SpeakFrench, message -> LogTools.info("Client: SpeakFrench: {}", message));
-      serverMessager.registerTopicListener(ListenEnglish, message -> LogTools.info("Server: ListenEnglish: {}", message));
-      serverMessager.registerTopicListener(ListenFrench, message -> LogTools.info("Server: ListenFrench: {}", message));
-      serverMessager.registerTopicListener(SpeakEnglish, message -> LogTools.info("Server: SpeakEnglish: {}", message));
-      serverMessager.registerTopicListener(SpeakFrench, message -> LogTools.info("Server: SpeakFrench: {}", message));
+      clientMessager.addTopicListener(ListenEnglish, message -> LogTools.info("Client: ListenEnglish: {}", message));
+      clientMessager.addTopicListener(ListenFrench, message -> LogTools.info("Client: ListenFrench: {}", message));
+      clientMessager.addTopicListener(SpeakEnglish, message -> LogTools.info("Client: SpeakEnglish: {}", message));
+      clientMessager.addTopicListener(SpeakFrench, message -> LogTools.info("Client: SpeakFrench: {}", message));
+      serverMessager.addTopicListener(ListenEnglish, message -> LogTools.info("Server: ListenEnglish: {}", message));
+      serverMessager.addTopicListener(ListenFrench, message -> LogTools.info("Server: ListenFrench: {}", message));
+      serverMessager.addTopicListener(SpeakEnglish, message -> LogTools.info("Server: SpeakEnglish: {}", message));
+      serverMessager.addTopicListener(SpeakFrench, message -> LogTools.info("Server: SpeakFrench: {}", message));
 
       String[] numbers = {"un", "deux", "trois", "quatre", "cinq"};
       MutableInt count = new MutableInt();
-      serverMessager.registerTopicListener(ListenFrench, message -> frenchPersonListensToFrench(serverMessager, message, numbers, count));
-      serverMessager.registerTopicListener(SpeakEnglish, message -> bilingualPersonListensToEnglish(serverMessager, message, englishToFrenchNumbers));
-      serverMessager.registerTopicListener(SpeakFrench, message -> bilingualPersonListensToFrench(serverMessager, message, frenchToEnglishNumbers));
+      serverMessager.addTopicListener(ListenFrench, message -> frenchPersonListensToFrench(serverMessager, message, numbers, count));
+      serverMessager.addTopicListener(SpeakEnglish, message -> bilingualPersonListensToEnglish(serverMessager, message, englishToFrenchNumbers));
+      serverMessager.addTopicListener(SpeakFrench, message -> bilingualPersonListensToFrench(serverMessager, message, frenchToEnglishNumbers));
 
       LogTools.info("Latest french the english heard: {}", frenchInput.get());
       LogTools.info("Latest english the french heard: {}", englishInput.get());
