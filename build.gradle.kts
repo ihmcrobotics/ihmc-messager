@@ -15,7 +15,7 @@ ihmc {
 mainDependencies {
    api("net.sf.trove4j:trove4j:3.0.3")
    api("us.ihmc:ihmc-commons:0.34.0")
-   api("us.ihmc:log-tools:0.6.4")
+   api("us.ihmc:log-tools:0.6.5")
 }
 
 javafxDependencies {
