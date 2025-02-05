@@ -20,7 +20,7 @@ mainDependencies {
 
 javafxDependencies {
    api(ihmc.sourceSetProject("main"))
-   var javaFXVersion = "17.0.2"
+   var javaFXVersion = "17.0.8"
    api(ihmc.javaFXModule("base", javaFXVersion))
    api(ihmc.javaFXModule("graphics", javaFXVersion))
 }
