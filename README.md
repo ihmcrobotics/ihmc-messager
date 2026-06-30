@@ -1,4 +1,5 @@
 # IHMC Messager
+# This project is no longer being supported.
 [ ![messager](https://maven-badges.herokuapp.com/maven-central/us.ihmc/ihmc-messager/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/us.ihmc/ihmc-messager)
 [ ![buildstatus](https://bamboo.ihmc.us/plugins/servlet/wittified/build-status/LIBS-IHMCMESSAGER)](https://bamboo.ihmc.us/plugins/servlet/wittified/build-status/LIBS-IHMCMESSAGER)
 
